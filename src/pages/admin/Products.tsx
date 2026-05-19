@@ -85,22 +85,38 @@ export default function AdminProducts() {
         return;
       }
 
-      // 2. 查询已支付订单的 order_items 来统计真实销量
-      const { data: orderItems, error: itemsError } = await supabase
-        .from('order_items')
-        .select('product_id, quantity')
+      // 2. 查询已支付的订单 ID
+      const { data: paidOrders, error: ordersError } = await supabase
+        .from('orders')
+        .select('id')
         .eq('payment_status', 'paid');
 
-      if (itemsError) {
-        console.error('fetch order_items error:', itemsError);
+      if (ordersError) {
+        console.error('fetch paid orders error:', ordersError);
       }
 
-      // 3. 统计每个商品的销量
-      const salesMap = new Map<string, number>();
-      orderItems?.forEach(item => {
-        const current = salesMap.get(item.product_id) || 0;
-        salesMap.set(item.product_id, current + (item.quantity || 1));
-      });
+      const paidOrderIds = paidOrders?.map(o => o.id) || [];
+
+      // 3. 查询这些已支付订单的 order_items
+      let salesMap = new Map<string, number>();
+      if (paidOrderIds.length > 0) {
+        const { data: orderItems, error: itemsError } = await supabase
+          .from('order_items')
+          .select('product_id, quantity')
+          .in('order_id', paidOrderIds);
+
+        if (itemsError) {
+          console.error('fetch order_items error:', itemsError);
+        }
+
+        // 4. 统计每个商品的销量
+        orderItems?.forEach(item => {
+          if (item.product_id) {
+            const current = salesMap.get(item.product_id) || 0;
+            salesMap.set(item.product_id, current + (item.quantity || 1));
+          }
+        });
+      }
 
       // 4. 合并销量数据到商品
       const productsWithSales = productsData.map(product => ({
