@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import React, { useState, useEffect } from 'react';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import {
   Elements,
   CardElement,
@@ -10,23 +10,23 @@ import { motion } from 'framer-motion';
 import { CreditCard, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase, getSupabaseUrl } from '../supabase/client';
 
-const stripePromise = loadStripe(process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key');
-
 interface StripePaymentFormProps {
   amount: number;
   orderId: string;
+  publishableKey: string;
   onSuccess: (paymentIntentId: string) => void;
   onError: (error: string) => void;
 }
 
-function PaymentForm({ amount, orderId, onSuccess, onError }: StripePaymentFormProps) {
+function PaymentForm({ amount, orderId, publishableKey, onSuccess, onError }: StripePaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [initError, setInitError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     createPaymentIntent();
   }, []);
 
@@ -40,20 +40,24 @@ function PaymentForm({ amount, orderId, onSuccess, onError }: StripePaymentFormP
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           action: 'create-payment-intent',
-          data: { amount, orderId },
+          data: { amount, orderId, currency: 'eur' },
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        onError(result.error || 'Failed to initialize payment');
+        const errMsg = result.error || 'Failed to initialize payment';
+        setInitError(errMsg);
+        onError(errMsg);
         return;
       }
 
       setClientSecret(result.clientSecret);
-    } catch (err) {
-      onError('Failed to initialize payment');
+    } catch (err: any) {
+      const errMsg = err.message || 'Failed to initialize payment. The payment server may not be configured.';
+      setInitError(errMsg);
+      onError(errMsg);
     }
   };
 
@@ -76,7 +80,7 @@ function PaymentForm({ amount, orderId, onSuccess, onError }: StripePaymentFormP
     if (error) {
       setPaymentStatus('error');
       onError(error.message || 'Payment failed');
-    } else if (paymentIntent.status === 'succeeded') {
+    } else if (paymentIntent?.status === 'succeeded') {
       setPaymentStatus('success');
       onSuccess(paymentIntent.id);
     } else {
@@ -101,6 +105,28 @@ function PaymentForm({ amount, orderId, onSuccess, onError }: StripePaymentFormP
       },
     },
   };
+
+  if (initError) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl shadow-sm p-6"
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <h2 className="text-xl font-bold text-gray-900">Payment Initialization Failed</h2>
+        </div>
+        <p className="text-gray-600 mb-4">{initError}</p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-sm text-yellow-800">
+            <strong>Note:</strong> This usually means the Stripe payment server function is not deployed.
+            Please deploy the edge function in your Supabase project or contact support.
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
 
   if (paymentStatus === 'success') {
     return (
@@ -131,7 +157,7 @@ function PaymentForm({ amount, orderId, onSuccess, onError }: StripePaymentFormP
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <div className="flex justify-between items-center">
           <span className="text-gray-600">Amount to Pay</span>
-          <span className="text-2xl font-bold text-gray-900">${amount.toFixed(2)}</span>
+          <span className="text-2xl font-bold text-gray-900">€{amount.toFixed(2)}</span>
         </div>
       </div>
 
@@ -161,7 +187,7 @@ function PaymentForm({ amount, orderId, onSuccess, onError }: StripePaymentFormP
           disabled={!stripe || loading || !clientSecret}
           className="w-full py-4 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Processing...' : `Pay $${amount.toFixed(2)}`}
+          {loading ? 'Processing...' : `Pay €${amount.toFixed(2)}`}
         </motion.button>
       </form>
 
@@ -173,6 +199,22 @@ function PaymentForm({ amount, orderId, onSuccess, onError }: StripePaymentFormP
 }
 
 export default function StripePaymentWrapper(props: StripePaymentFormProps) {
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+
+  useEffect(() => {
+    if (props.publishableKey) {
+      setStripePromise(loadStripe(props.publishableKey));
+    }
+  }, [props.publishableKey]);
+
+  if (!stripePromise) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+        <p className="text-gray-600">Initializing Stripe...</p>
+      </div>
+    );
+  }
+
   return (
     <Elements stripe={stripePromise}>
       <PaymentForm {...props} />

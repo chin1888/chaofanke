@@ -157,7 +157,7 @@ export default function AdminOrders() {
                     <div>
                       <p className="text-sm text-gray-500 mb-1">{stat.category_name}</p>
                       <p className="text-2xl font-bold text-gray-900">{stat.total_quantity} pcs</p>
-                      <p className="text-sm text-green-600">${stat.total_amount.toLocaleString()}</p>
+                      <p className="text-sm text-green-600">€{stat.total_amount.toLocaleString()}</p>
                     </div>
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                       <Package className="w-5 h-5 text-blue-600" />
@@ -196,7 +196,7 @@ export default function AdminOrders() {
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3">${order.total_amount}</td>
+                    <td className="px-4 py-3">€{order.total_amount}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-xs ${
                         order.status === 'completed' ? 'bg-green-100 text-green-700' :

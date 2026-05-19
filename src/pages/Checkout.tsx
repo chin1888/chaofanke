@@ -108,8 +108,7 @@ export default function Checkout() {
       }));
       await supabase.from('order_items').insert(orderItems);
       clearCart();
-      alert('Order created successfully!');
-      navigate('/');
+      navigate(`/payment?orderId=${order.id}&amount=${totalPrice}&orderNumber=${encodeURIComponent(orderNumber)}`);
     } else {
       alert('Order creation failed: ' + (error?.message || 'Unknown error'));
     }

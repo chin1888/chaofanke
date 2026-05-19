@@ -9,6 +9,7 @@ import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import Payment from './pages/Payment';
 import AdminLogin from './pages/admin/Login';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminTrafficStats from './pages/admin/TrafficStats';
@@ -42,6 +43,7 @@ function App() {
               <Route path="products/:slug" element={<ProductDetail />} />
               <Route path="cart" element={<Cart />} />
               <Route path="checkout" element={<Checkout />} />
+              <Route path="payment" element={<Payment />} />
               <Route path="profile" element={<Profile />} />
             </Route>
             <Route path="/admin/login" element={<AdminLogin />} />

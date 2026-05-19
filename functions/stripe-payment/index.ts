@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const { action, data } = await req.json();
 
     if (action === 'create-payment-intent') {
-      const { amount, currency = 'usd', orderId } = data;
+      const { amount, currency = 'eur', orderId } = data;
 
       const response = await fetch('https://api.stripe.com/v1/payment_intents', {
         method: 'POST',
