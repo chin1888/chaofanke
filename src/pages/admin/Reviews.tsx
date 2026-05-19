@@ -1,0 +1,266 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Star, ThumbsUp, Share2, Trash2, Check, Package, ShoppingCart, Users, LogOut, TrendingUp, FileText, CreditCard, Image as ImageIcon, LayoutDashboard, BarChart3, Search } from 'lucide-react';
+import { supabase } from '../../supabase/client';
+import { useAuth } from '../../contexts/AuthContext';
+
+interface Review {
+  id: string;
+  customer_name: string;
+  rating: number;
+  content: string;
+  is_featured: boolean;
+  is_active: boolean;
+  created_at: string;
+  product_name?: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  likes_count: number;
+  shares_count: number;
+  actualLikes?: number;
+  actualShares?: number;
+}
+
+interface LikeItem {
+  id: string;
+  product_id: string;
+  user_id: string | null;
+  username: string;
+}
+
+interface ShareItem {
+  id: string;
+  product_id: string;
+  user_id: string | null;
+  username: string;
+}
+
+type TabType = 'reviews' | 'likes' | 'shares';
+
+export default function AdminReviews() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabType>('reviews');
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [likesList, setLikesList] = useState<LikeItem[]>([]);
+  const [sharesList, setSharesList] = useState<ShareItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [stats, setStats] = useState({ reviews: 0, likes: 0, shares: 0 });
+  const [likesSortOrder, setLikesSortOrder] = useState<'desc' | 'asc'>('desc');
+
+  const menuItems = [
+    { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
+    { name: 'Overview', path: '/admin/user-stats', icon: FileText },
+    { name: 'Traffic', path: '/admin/traffic-stats', icon: TrendingUp },
+    { name: 'Sales', path: '/admin/orders', icon: ShoppingCart },
+    { name: 'Products', path: '/admin/products', icon: Package },
+    { name: 'Banners', path: '/admin/banners', icon: ImageIcon },
+    { name: 'Categories', path: '/admin/categories', icon: BarChart3 },
+    { name: 'Users', path: '/admin/users', icon: Users },
+    { name: 'Reviews', path: '/admin/reviews', icon: Star },
+    { name: 'Payments', path: '/admin/payment-gateways', icon: CreditCard },
+  ];
+
+  useEffect(() => {
+    if (!isAuthenticated) { navigate('/admin/login'); return; }
+    fetchData();
+
+    const likesChannel = supabase.channel('product_likes_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_likes' }, () => fetchData())
+      .subscribe();
+
+    const sharesChannel = supabase.channel('product_shares_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_shares' }, () => fetchData())
+      .subscribe();
+
+    return () => {
+      likesChannel.unsubscribe();
+      sharesChannel.unsubscribe();
+    };
+  }, [isAuthenticated, navigate, activeTab]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const { data: reviewsData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+    const { data: productsData } = await supabase.from('products').select('id, name, likes_count, shares_count');
+    const { data: likesData } = await supabase.from('product_likes').select('*');
+    const { data: sharesData } = await supabase.from('product_shares').select('*');
+
+    const productsWithLikes = (productsData || []).map(p => ({
+      ...p,
+      actualLikes: (likesData || []).filter(l => l.product_id === p.id).length,
+      actualShares: (sharesData || []).filter(s => s.product_id === p.id).length
+    }));
+
+    setReviews(reviewsData || []);
+    setProducts(productsWithLikes);
+    setLikesList(likesData || []);
+    setSharesList(sharesData || []);
+    setStats({
+      reviews: reviewsData?.length || 0,
+      likes: likesData?.length || 0,
+      shares: sharesData?.length || 0
+    });
+    setLoading(false);
+  };
+
+  const handleLogout = () => { logout(); navigate('/admin/login'); };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('确定删除？')) {
+      await supabase.from('reviews').delete().eq('id', id);
+      fetchData();
+    }
+  };
+
+  const toggleFeatured = async (id: string, current: boolean) => {
+    await supabase.from('reviews').update({ is_featured: !current }).eq('id', id);
+    fetchData();
+  };
+
+  const toggleActive = async (id: string, current: boolean) => {
+    await supabase.from('reviews').update({ is_active: !current }).eq('id', id);
+    fetchData();
+  };
+
+  const filteredReviews = reviews.filter(r => 
+    r.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.content?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (!isAuthenticated) return null;
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <aside className="w-56 bg-blue-50 min-h-screen flex flex-col">
+        <div className="p-4"><h1 className="text-lg font-bold text-gray-800">Admin Panel</h1></div>
+        <nav className="flex-1 px-2">
+          {menuItems.map((item) => (
+            <button key={item.name} onClick={() => navigate(item.path)}
+              className={`w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-blue-100 rounded-lg transition-colors text-left ${location.pathname === item.path ? 'bg-blue-100 text-blue-700' : ''}`}>
+              <item.icon className="w-5 h-5" />
+              <span className="text-base font-medium">{item.name}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-blue-100">
+          <button onClick={handleLogout} className="w-full flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-blue-100 rounded-lg transition-colors">
+            <LogOut className="w-5 h-5" /><span className="text-sm font-medium">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <main className="flex-1 overflow-auto p-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Review Management</h1>
+        
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Total Reviews</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.reviews}</p>
+              </div>
+              <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <Star className="w-5 h-5 text-yellow-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Total Likes</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.likes}</p>
+              </div>
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <ThumbsUp className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Total Shares</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.shares}</p>
+              </div>
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <Share2 className="w-5 h-5 text-green-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex gap-2">
+              {(['reviews', 'likes', 'shares'] as TabType[]).map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === tab ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                  {tab === 'reviews' ? 'Reviews' : tab === 'likes' ? 'Likes' : 'Shares'}
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+
+          {loading ? <div className="text-center py-12 text-gray-500">Loading...</div> : (
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  {activeTab === 'likes' ? (
+                    <>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Product</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer hover:text-blue-600" onClick={() => setLikesSortOrder(likesSortOrder === 'desc' ? 'asc' : 'desc')}>
+                        Likes {likesSortOrder === 'desc' ? '↓' : '↑'}
+                      </th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">User</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Product</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{activeTab === 'reviews' ? 'Rating' : 'Count'}</th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {activeTab === 'reviews' && filteredReviews.map((review, index) => (
+                  <tr key={review.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{review.customer_name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{review.product_name || 'Unknown Product'}</td>
+                    <td className="px-4 py-3 text-sm text-blue-600">{review.rating}</td>
+                  </tr>
+                ))}
+                {activeTab === 'likes' && products
+                  .sort((a, b) => likesSortOrder === 'desc' ? (b.actualLikes || 0) - (a.actualLikes || 0) : (a.actualLikes || 0) - (b.actualLikes || 0))
+                  .map((product, index) => (
+                  <tr key={product.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
+                    <td className="px-4 py-3 text-sm text-gray-600">{product.name}</td>
+                    <td className="px-4 py-3 text-sm text-blue-600">{product.actualLikes || 0}</td>
+                  </tr>
+                ))}
+                {activeTab === 'shares' && sharesList.map((share, index) => (
+                  <tr key={share.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{share.username || 'Default User'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{products.find(p => p.id === share.product_id)?.name || 'Unknown Product'}</td>
+                    <td className="px-4 py-3 text-sm text-green-600">1</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
