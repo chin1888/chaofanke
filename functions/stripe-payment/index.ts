@@ -1,7 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
-const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') || '';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,24 +17,25 @@ Deno.serve(async (req) => {
     if (action === 'create-payment-intent') {
       const { amount, currency = 'eur', orderId } = data;
 
+      const params = new URLSearchParams();
+      params.append('amount', (amount * 100).toString());
+      params.append('currency', currency);
+      params.append('metadata[order_id]', orderId);
+      params.append('automatic_payment_methods[enabled]', 'true');
+
       const response = await fetch('https://api.stripe.com/v1/payment_intents', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          amount: (amount * 100).toString(),
-          currency,
-          'metadata[order_id]': orderId,
-          automatic_payment_methods: JSON.stringify({ enabled: true }),
-        }),
+        body: params,
       });
 
       const paymentIntent = await response.json();
 
       if (!response.ok) {
-        return new Response(JSON.stringify({ error: paymentIntent.error?.message || 'Failed to create payment intent' }), {
+        return new Response(JSON.stringify({ error: paymentIntent.error?.message || JSON.stringify(paymentIntent) }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
