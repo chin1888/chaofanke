@@ -67,14 +67,48 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
+      // 1. 查询所有商品
+      const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*, category:categories(name)')
         .order('created_at', { ascending: false });
-      if (error) {
-        console.error('fetchProducts error:', error);
+
+      if (productsError) {
+        console.error('fetchProducts error:', productsError);
+        setLoading(false);
+        return;
       }
-      setProducts(data || []);
+
+      if (!productsData || productsData.length === 0) {
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+
+      // 2. 查询已支付订单的 order_items 来统计真实销量
+      const { data: orderItems, error: itemsError } = await supabase
+        .from('order_items')
+        .select('product_id, quantity')
+        .eq('payment_status', 'paid');
+
+      if (itemsError) {
+        console.error('fetch order_items error:', itemsError);
+      }
+
+      // 3. 统计每个商品的销量
+      const salesMap = new Map<string, number>();
+      orderItems?.forEach(item => {
+        const current = salesMap.get(item.product_id) || 0;
+        salesMap.set(item.product_id, current + (item.quantity || 1));
+      });
+
+      // 4. 合并销量数据到商品
+      const productsWithSales = productsData.map(product => ({
+        ...product,
+        sales_count: salesMap.get(product.id) || 0
+      }));
+
+      setProducts(productsWithSales);
     } catch (err) {
       console.error('fetchProducts catch:', err);
     }
