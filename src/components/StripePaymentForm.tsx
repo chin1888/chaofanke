@@ -35,7 +35,7 @@ function PaymentForm({ amount, orderId, publishableKey, onSuccess, onError }: St
       const session = (await supabase.auth.getSession()).data.session;
       const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
 
-      const response = await fetch(`${getSupabaseUrl()}/functions/v1/stripe-payment`, {
+      const response = await fetch(`${getSupabaseUrl()}/functions/v1/clever-processor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
