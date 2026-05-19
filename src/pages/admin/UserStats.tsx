@@ -44,7 +44,7 @@ export default function UserStats() {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
-    const [{ count: users }, { count: orders }, { count: products }, { count: reviews }, { data: ordersData }, { data: monthlyOrders }] = await Promise.all([
+    const [{ count: users, error: usersError }, { count: orders, error: ordersError }, { count: products, error: productsError }, { count: reviews, error: reviewsError }, { data: ordersData, error: ordersDataError }, { data: monthlyOrders, error: monthlyError }] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('orders').select('*', { count: 'exact', head: true }),
       supabase.from('products').select('*', { count: 'exact', head: true }),
@@ -52,6 +52,12 @@ export default function UserStats() {
       supabase.from('orders').select('total_amount, created_at').eq('payment_status', 'paid'),
       supabase.from('orders').select('total_amount').eq('payment_status', 'paid').gte('created_at', startOfMonth)
     ]);
+
+    // 添加调试日志
+    if (usersError) console.error('Profiles query error:', usersError);
+    if (ordersError) console.error('Orders query error:', ordersError);
+    console.log('Total users:', users);
+    console.log('Total orders:', orders);
 
     const totalSales = ordersData?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0;
     const paidOrders = ordersData?.length || 0;
