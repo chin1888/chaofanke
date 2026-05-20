@@ -444,7 +444,7 @@ export default function AdminProducts() {
                       </div>
                     </div>
                   </div>
-                  <div className="col-span-1 text-center text-gray-900">€{product.price}</div>
+                  <div className="col-span-1 text-center text-gray-900">${product.price}</div>
                   <div className="col-span-1 text-center text-gray-900">{product.stock}</div>
                   <div className="col-span-1 text-center text-gray-900">{product.sales_count || 0}</div>
                   <div className="col-span-1 text-center">

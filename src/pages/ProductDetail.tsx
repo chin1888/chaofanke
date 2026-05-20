@@ -296,9 +296,9 @@ export default function ProductDetail() {
             </div>
 
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold text-gray-900">€{product.price}</span>
+              <span className="text-4xl font-bold text-gray-900">${product.price}</span>
               {product.original_price && product.original_price > product.price && (
-                <span className="text-xl text-gray-400 line-through">€{product.original_price}</span>
+                <span className="text-xl text-gray-400 line-through">${product.original_price}</span>
               )}
             </div>
 
@@ -443,7 +443,7 @@ export default function ProductDetail() {
                   </motion.div>
                   <div className="p-4">
                     <h3 className="font-medium text-gray-900 group-hover:text-gray-700 transition-colors line-clamp-1">{item.name}</h3>
-                    <p className="text-gray-900 font-semibold mt-2">€{item.price}</p>
+                    <p className="text-gray-900 font-semibold mt-2">${item.price}</p>
                     <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <Heart className="w-4 h-4" />

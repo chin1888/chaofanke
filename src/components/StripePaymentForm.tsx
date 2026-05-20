@@ -40,7 +40,7 @@ function PaymentForm({ amount, orderId, publishableKey, onSuccess, onError }: St
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           action: 'create-payment-intent',
-          data: { amount, orderId, currency: 'eur' },
+          data: { amount, orderId, currency: 'usd' },
         }),
       });
 
@@ -157,7 +157,7 @@ function PaymentForm({ amount, orderId, publishableKey, onSuccess, onError }: St
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <div className="flex justify-between items-center">
           <span className="text-gray-600">Amount to Pay</span>
-          <span className="text-2xl font-bold text-gray-900">€{amount.toFixed(2)}</span>
+          <span className="text-2xl font-bold text-gray-900">${amount.toFixed(2)}</span>
         </div>
       </div>
 
@@ -187,7 +187,7 @@ function PaymentForm({ amount, orderId, publishableKey, onSuccess, onError }: St
           disabled={!stripe || loading || !clientSecret}
           className="w-full py-4 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Processing...' : `Pay €${amount.toFixed(2)}`}
+          {loading ? 'Processing...' : `Pay $${amount.toFixed(2)}`}
         </motion.button>
       </form>
 

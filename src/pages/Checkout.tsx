@@ -223,7 +223,7 @@ export default function Checkout() {
                     <div className="flex justify-between"><span className="text-gray-600">Payment Method</span><span>{paymentMethods.find(m => m.code === paymentMethod)?.name}</span></div>
                     <div className="border-t pt-4 flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span>€{totalPrice.toFixed(2)}</span>
+                      <span>${totalPrice.toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="flex gap-4">
@@ -246,14 +246,14 @@ export default function Checkout() {
                       <h3 className="font-medium">{item.name}</h3>
                       <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                     </div>
-                    <span className="font-semibold">€{(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
               <div className="border-t mt-6 pt-6">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>€{totalPrice.toFixed(2)}</span>
+                  <span>${totalPrice.toFixed(2)}</span>
                 </div>
               </div>
             </div>

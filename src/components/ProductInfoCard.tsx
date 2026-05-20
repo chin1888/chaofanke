@@ -30,9 +30,9 @@ export default function ProductInfoCard({
       </div>
 
       <div className="flex items-baseline gap-3">
-        <span className="text-4xl font-bold text-gray-900">€{price.toFixed(2)}</span>
+        <span className="text-4xl font-bold text-gray-900">${price.toFixed(2)}</span>
         {originalPrice && originalPrice > price && (
-          <span className="text-xl text-gray-400 line-through">€{originalPrice.toFixed(2)}</span>
+          <span className="text-xl text-gray-400 line-through">${originalPrice.toFixed(2)}</span>
         )}
       </div>
 

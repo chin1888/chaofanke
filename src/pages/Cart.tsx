@@ -51,7 +51,7 @@ export default function Cart() {
                 />
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                  <p className="text-gray-500 text-sm mt-1">€{item.price.toFixed(2)}</p>
+                  <p className="text-gray-500 text-sm mt-1">${item.price.toFixed(2)}</p>
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center space-x-2">
                       <button
@@ -78,7 +78,7 @@ export default function Cart() {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-gray-900">
-                    €{(item.price * item.quantity).toFixed(2)}
+                    ${(item.price * item.quantity).toFixed(2)}
                   </p>
                 </div>
               </motion.div>
@@ -90,7 +90,7 @@ export default function Cart() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-gray-500">
                 <span>Subtotal</span>
-                <span>€{totalPrice.toFixed(2)}</span>
+                <span>${totalPrice.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-gray-500">
                 <span>Shipping</span>
@@ -98,7 +98,7 @@ export default function Cart() {
               </div>
               <div className="border-t pt-3 flex justify-between text-lg font-semibold">
                 <span>Total</span>
-                <span>€{totalPrice.toFixed(2)}</span>
+                <span>${totalPrice.toFixed(2)}</span>
               </div>
             </div>
             <button

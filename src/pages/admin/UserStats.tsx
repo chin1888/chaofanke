@@ -118,7 +118,7 @@ export default function UserStats() {
     { title: 'Total Orders', value: stats.totalOrders, icon: ShoppingCart, color: 'text-green-600', bgColor: 'bg-green-50' },
     { title: 'Total Products', value: stats.totalProducts, icon: Package, color: 'text-purple-600', bgColor: 'bg-purple-50' },
     { title: 'Total Reviews', value: stats.totalReviews, icon: Star, color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
-    { title: 'Total Sales', value: `€${stats.totalSales.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: 'Total Sales', value: `$${stats.totalSales.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
     { title: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: TrendIcon, color: 'text-orange-600', bgColor: 'bg-orange-50' },
   ];
 

@@ -248,7 +248,7 @@ export default function ProductPublish() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">€{product.price}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900">${product.price}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">{product.stock}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">{product.sales_count || 0}</td>
                     <td className="px-4 py-3">

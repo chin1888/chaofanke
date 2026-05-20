@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const { action, data } = await req.json();
 
     if (action === 'create-payment-intent') {
-      const { amount, currency = 'eur', orderId } = data;
+      const { amount, currency = 'usd', orderId } = data;
 
       const params = new URLSearchParams();
       params.append('amount', (amount * 100).toString());
