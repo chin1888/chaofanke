@@ -53,6 +53,38 @@ export default function Users() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      const response = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+        setFilteredUsers(data.users || []);
+
+        const now = new Date();
+        const thisMonth = (data.users || []).filter((u: any) => {
+          const d = new Date(u.created_at);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        });
+
+        setStats({
+          total: data.total || 0,
+          newThisMonth: thisMonth.length,
+          active: (data.users || []).filter((u: any) => u.role !== 'banned').length
+        });
+      } else {
+        // Fallback to direct query
+        await fetchUsersDirect();
+      }
+    } catch {
+      await fetchUsersDirect();
+    }
+    setLoading(false);
+  };
+
+  const fetchUsersDirect = async () => {
+    try {
       const { data: profiles } = await supabase.from('profiles').select('*');
       const { data: roles } = await supabase.from('user_roles').select('*');
 
@@ -65,7 +97,7 @@ export default function Users() {
       setFilteredUsers(usersWithRoles);
 
       const now = new Date();
-      const thisMonth = usersWithRoles.filter(u => {
+      const thisMonth = usersWithRoles.filter((u: any) => {
         const d = new Date(u.created_at);
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       });
@@ -73,12 +105,11 @@ export default function Users() {
       setStats({
         total: usersWithRoles.length,
         newThisMonth: thisMonth.length,
-        active: usersWithRoles.filter(u => u.role !== 'banned').length
+        active: usersWithRoles.filter((u: any) => u.role !== 'banned').length
       });
     } catch (err) {
       console.error('Fetch users error:', err);
     }
-    setLoading(false);
   };
 
   const handleLogout = () => {

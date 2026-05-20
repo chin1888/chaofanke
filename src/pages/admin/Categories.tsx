@@ -57,8 +57,23 @@ export default function AdminCategories() {
   }, [isAuthenticated, navigate]);
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from('categories').select('*').order('sort_order');
-    setCategories(data || []);
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin-categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.categories || []);
+      } else {
+        const { data } = await supabase.from('categories').select('*').order('sort_order');
+        setCategories(data || []);
+      }
+    } catch {
+      const { data } = await supabase.from('categories').select('*').order('sort_order');
+      setCategories(data || []);
+    }
     setLoading(false);
   };
 

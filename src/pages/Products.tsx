@@ -105,9 +105,9 @@ export default function Products() {
   return (
     <>
       <SEO
-        title={`${categoryName} - ALWAHA Premium Vape Products`}
-        description={`Explore ALWAHA ${categoryName} series, German premium vape brand, carbon-free design, 94% less harmful substances.`}
-        keywords={`ALWAHA,${categoryName},vape,premium vape,German brand`}
+        title={`${categoryName} - E-Hookan Premium Vape Products`}
+        description={`Explore E-Hookan ${categoryName} series, premium electric hookah & vape brand, carbon-free design, 94% less harmful substances.`}
+        keywords={`E-Hookan,${categoryName},vape,hookah,premium vape,electric hookah`}
       />
       <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

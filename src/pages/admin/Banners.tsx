@@ -59,8 +59,23 @@ export default function AdminBanners() {
   }, [isAuthenticated, navigate]);
 
   const fetchBanners = async () => {
-    const { data } = await supabase.from('banners').select('*').order('sort_order');
-    setBanners(data || []);
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin-banners', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBanners(data.banners || []);
+      } else {
+        const { data } = await supabase.from('banners').select('*').order('sort_order');
+        setBanners(data || []);
+      }
+    } catch {
+      const { data } = await supabase.from('banners').select('*').order('sort_order');
+      setBanners(data || []);
+    }
     setLoading(false);
   };
 

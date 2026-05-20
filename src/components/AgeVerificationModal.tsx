@@ -18,22 +18,22 @@ export default function AgeVerificationModal({ onConfirm, onDeny }: AgeVerificat
         animate={{ scale: 1, opacity: 1 }}
         className="bg-white rounded-2xl p-8 max-w-md w-full text-center"
       >
-        <h2 className="text-2xl font-bold mb-4">年龄验证</h2>
+        <h2 className="text-2xl font-bold mb-4">Age Verification</h2>
         <p className="text-gray-600 mb-8">
-          本网站包含仅限成人观看的内容。请确认您已年满18岁。
+          This website contains products intended for adults only. Please confirm you are 18 years or older.
         </p>
         <div className="flex gap-4">
           <button
             onClick={onDeny}
             className="flex-1 px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
           >
-            未满18岁
+            I am under 18
           </button>
           <button
             onClick={onConfirm}
             className="flex-1 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800"
           >
-            我已满18岁
+            I am 18 or older
           </button>
         </div>
       </motion.div>

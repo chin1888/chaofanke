@@ -88,15 +88,53 @@ export default function AdminReviews() {
 
   const fetchData = async () => {
     setLoading(true);
+    try {
+      const response = await fetch('/api/admin-reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const reviewsData = data.reviews || [];
+        setReviews(reviewsData);
+
+        const { data: likesData } = await supabase.from('product_likes').select('*');
+        const { data: sharesData } = await supabase.from('product_shares').select('*');
+        const { data: productsData } = await supabase.from('products').select('id, name, likes_count, shares_count');
+
+        const productsWithLikes = (productsData || []).map((p: any) => ({
+          ...p,
+          actualLikes: (likesData || []).filter((l: any) => l.product_id === p.id).length,
+          actualShares: (sharesData || []).filter((s: any) => s.product_id === p.id).length
+        }));
+
+        setProducts(productsWithLikes);
+        setLikesList(likesData || []);
+        setSharesList(sharesData || []);
+        setStats({
+          reviews: reviewsData.length,
+          likes: likesData?.length || 0,
+          shares: sharesData?.length || 0
+        });
+      } else {
+        await fetchDataDirect();
+      }
+    } catch {
+      await fetchDataDirect();
+    }
+    setLoading(false);
+  };
+
+  const fetchDataDirect = async () => {
     const { data: reviewsData } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
     const { data: productsData } = await supabase.from('products').select('id, name, likes_count, shares_count');
     const { data: likesData } = await supabase.from('product_likes').select('*');
     const { data: sharesData } = await supabase.from('product_shares').select('*');
 
-    const productsWithLikes = (productsData || []).map(p => ({
+    const productsWithLikes = (productsData || []).map((p: any) => ({
       ...p,
-      actualLikes: (likesData || []).filter(l => l.product_id === p.id).length,
-      actualShares: (sharesData || []).filter(s => s.product_id === p.id).length
+      actualLikes: (likesData || []).filter((l: any) => l.product_id === p.id).length,
+      actualShares: (sharesData || []).filter((s: any) => s.product_id === p.id).length
     }));
 
     setReviews(reviewsData || []);
@@ -108,7 +146,6 @@ export default function AdminReviews() {
       likes: likesData?.length || 0,
       shares: sharesData?.length || 0
     });
-    setLoading(false);
   };
 
   const handleLogout = () => { logout(); navigate('/admin/login'); };

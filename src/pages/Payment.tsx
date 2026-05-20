@@ -101,7 +101,7 @@ export default function Payment() {
 
   return (
     <>
-      <SEO title="Payment - OOKA | Secure Checkout" description="Complete your payment securely with Stripe." />
+      <SEO title="Payment - E-Hookan | Secure Checkout" description="Complete your payment securely with Stripe." />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <button onClick={() => navigate('/checkout')} className="flex items-center text-gray-600 hover:text-gray-900 mb-6">

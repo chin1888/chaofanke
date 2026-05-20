@@ -63,7 +63,7 @@ export default function Home() {
   };
 
   const handleAgeDeny = () => {
-    window.location.href = 'https://www.baidu.com';
+    window.location.href = '/';
   };
 
   useEffect(() => {
@@ -126,17 +126,17 @@ export default function Home() {
   };
 
   const features = [
-    { icon: Zap, title: 'AM SCHNELLSTEN', desc: 'Mit ALWAHA verbringst Du weniger Zeit mit Warten' },
-    { icon: Sparkles, title: 'AM SAUBERSTEN', desc: 'Ohne die Mühe mit Kohle ist ALWAHA die sauberste Art' },
-    { icon: Leaf, title: 'VOLLER GENUSS', desc: 'Tauche ein in eine Geschmackswelt mit erstklassiger Molasse' },
-    { icon: Truck, title: 'MAXIMALE VIELSEITIGKEIT', desc: 'ALWAHA ist für einfache Mobilität gemacht' },
+    { icon: Zap, title: 'FASTEST', desc: 'With E-Hookan, spend less time waiting' },
+    { icon: Sparkles, title: 'CLEANEST', desc: 'Without the hassle of charcoal, E-Hookan is the cleanest way to enjoy' },
+    { icon: Leaf, title: 'FULL ENJOYMENT', desc: 'Dive into a world of flavor with premium molasses' },
+    { icon: Truck, title: 'MOST VERSATILE', desc: 'E-Hookan is designed for easy portability' },
   ];
 
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'ALWAHA',
-    description: 'Premium Elektro-Shisha ohne Kompromisse',
+    name: 'E-Hookan',
+    description: 'Premium Electric Hookah & Vape Products',
     url: '/',
     logo: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200',
     sameAs: [
@@ -149,9 +149,9 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="ALWAHA - Premium Electric Shisha without Compromises"
-        description="German premium electric shisha brand, first carbon-free shisha, 5-minute quick start, 94% less harmful substances. Explore devices, pods and accessories."
-        keywords="ALWAHA,electric shisha,shisha,carbon-free,premium,device,pods,German brand"
+        title="E-Hookan - Premium Electric Hookah & Vape Products"
+        description="E-Hookan offers premium electric hookah and vape products, carbon-free design, 94% less harmful substances. Explore devices, pods and accessories."
+        keywords="E-Hookan,electric hookah,vape,hookah,carbon-free,premium,device,pods,German brand"
       />
       <script type="application/ld+json">
         {JSON.stringify(structuredData)}
@@ -226,8 +226,8 @@ export default function Home() {
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <p className="text-sm text-gray-500 mb-2">VON DER WELTWEITEN #1</p>
-              <h2 className="text-3xl font-bold text-gray-900">DARUM IST ALWAHA BESSER</h2>
+              <p className="text-sm text-gray-500 mb-2">WORLD'S #1</p>
+              <h2 className="text-3xl font-bold text-gray-900">WHY E-HOOKAN IS BETTER</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {features.map((feature, index) => (
@@ -367,7 +367,7 @@ export default function Home() {
         <section className="py-20 bg-gray-900 text-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <p className="text-sm text-gray-400 mb-2">DAS SAGEN DIE ALWAHA-FANS</p>
+              <p className="text-sm text-gray-400 mb-2">WHAT E-HOOKAN FANS SAY</p>
             </div>
             {reviews.length > 0 && (
               <div className="relative">
@@ -417,13 +417,13 @@ export default function Home() {
                 viewport={{ once: true }}
               >
                 <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                  Eine ALWAHA. Viele Gründe zum Lächeln
+                  One E-Hookan. Many Reasons to Smile
                 </h2>
                 <p className="text-gray-600 mb-4">
-                  Als Pioniere in der Shisha-Welt haben wir ALWAHA geschaffen, um eine von uns gemeisterte Kategorie zu modernisieren.
+                  As pioneers in the hookah world, we created E-Hookan to modernize a category we've mastered.
                 </p>
                 <p className="text-gray-600 mb-6">
-                  Unterstützt von 4 Jahren Forschung und mehr als 50 Millionen US-Dollar in der Entwicklung, bietet ALWAHA eine neue und moderne Alternative zur herkömmlichen Shisha.
+                  Backed by 4 years of research and over 50 million USD in development, E-Hookan offers a new and modern alternative to traditional hookah.
                 </p>
                 <Link
                   to="/products"

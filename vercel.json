@@ -9,7 +9,65 @@
       }
     }
   ],
+  "functions": {
+    "functions/admin-stats/index.ts": {
+      "runtime": "edge"
+    },
+    "functions/dashboard-stats/index.ts": {
+      "runtime": "edge"
+    },
+    "functions/admin-users/index.ts": {
+      "runtime": "edge"
+    },
+    "functions/admin-orders/index.ts": {
+      "runtime": "edge"
+    },
+    "functions/admin-reviews/index.ts": {
+      "runtime": "edge"
+    },
+    "functions/admin-products/index.ts": {
+      "runtime": "edge"
+    },
+    "functions/admin-categories/index.ts": {
+      "runtime": "edge"
+    },
+    "functions/admin-banners/index.ts": {
+      "runtime": "edge"
+    }
+  },
   "routes": [
+    {
+      "src": "/api/admin-stats",
+      "dest": "/api/admin-stats"
+    },
+    {
+      "src": "/api/dashboard-stats",
+      "dest": "/api/dashboard-stats"
+    },
+    {
+      "src": "/api/admin-users",
+      "dest": "/api/admin-users"
+    },
+    {
+      "src": "/api/admin-orders",
+      "dest": "/api/admin-orders"
+    },
+    {
+      "src": "/api/admin-reviews",
+      "dest": "/api/admin-reviews"
+    },
+    {
+      "src": "/api/admin-products",
+      "dest": "/api/admin-products"
+    },
+    {
+      "src": "/api/admin-categories",
+      "dest": "/api/admin-categories"
+    },
+    {
+      "src": "/api/admin-banners",
+      "dest": "/api/admin-banners"
+    },
     {
       "handle": "filesystem"
     },

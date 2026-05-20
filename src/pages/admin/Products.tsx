@@ -67,7 +67,25 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
-      // 1. 查询所有商品
+      const response = await fetch('/api/admin-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data.products || []);
+        setCategories(data.categories || []);
+      } else {
+        await fetchProductsDirect();
+      }
+    } catch {
+      await fetchProductsDirect();
+    }
+    setLoading(false);
+  };
+
+  const fetchProductsDirect = async () => {
+    try {
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*, category:categories(name)')
@@ -85,32 +103,20 @@ export default function AdminProducts() {
         return;
       }
 
-      // 2. 查询已支付的订单 ID
-      const { data: paidOrders, error: ordersError } = await supabase
+      const { data: paidOrders } = await supabase
         .from('orders')
         .select('id')
         .eq('payment_status', 'paid');
 
-      if (ordersError) {
-        console.error('fetch paid orders error:', ordersError);
-      }
-
       const paidOrderIds = paidOrders?.map(o => o.id) || [];
-
-      // 3. 查询这些已支付订单的 order_items
       let salesMap = new Map<string, number>();
       if (paidOrderIds.length > 0) {
-        const { data: orderItems, error: itemsError } = await supabase
+        const { data: orderItems } = await supabase
           .from('order_items')
           .select('product_id, quantity')
           .in('order_id', paidOrderIds);
 
-        if (itemsError) {
-          console.error('fetch order_items error:', itemsError);
-        }
-
-        // 4. 统计每个商品的销量
-        orderItems?.forEach(item => {
+        orderItems?.forEach((item: any) => {
           if (item.product_id) {
             const current = salesMap.get(item.product_id) || 0;
             salesMap.set(item.product_id, current + (item.quantity || 1));
@@ -118,8 +124,7 @@ export default function AdminProducts() {
         });
       }
 
-      // 4. 合并销量数据到商品
-      const productsWithSales = productsData.map(product => ({
+      const productsWithSales = productsData.map((product: any) => ({
         ...product,
         sales_count: salesMap.get(product.id) || 0
       }));
@@ -128,10 +133,10 @@ export default function AdminProducts() {
     } catch (err) {
       console.error('fetchProducts catch:', err);
     }
-    setLoading(false);
   };
 
   const fetchCategories = async () => {
+    if (categories.length > 0) return; // Already loaded via Edge Function
     const { data } = await supabase.from('categories').select('id, name').eq('is_active', true);
     setCategories(data || []);
   };

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CreditCard, Truck, Check, Wallet, Building2, Smartphone } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { useUser } from '../contexts/UserContext';
 import { supabase } from '../supabase/client';
 import SEO from '../components/SEO';
 
@@ -27,6 +28,7 @@ interface PaymentMethod {
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
+  const { isLoggedIn } = useUser();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -42,6 +44,18 @@ export default function Checkout() {
   useEffect(() => {
     fetchPaymentMethods();
   }, []);
+
+  useEffect(() => {
+    if (items.length > 0 && !isLoggedIn) {
+      navigate('/login');
+    }
+  }, [isLoggedIn, items.length, navigate]);
+
+  useEffect(() => {
+    if (step === 1 && !isLoggedIn) {
+      navigate('/login');
+    }
+  }, [step, isLoggedIn, navigate]);
 
   const fetchPaymentMethods = async () => {
     const { data } = await supabase
@@ -78,7 +92,16 @@ export default function Checkout() {
   const handleSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+
     const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      alert('Please login to complete your order');
+      navigate('/login');
+      setIsSubmitting(false);
+      return;
+    }
+
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const { data: order, error } = await supabase
       .from('orders')
@@ -120,7 +143,7 @@ export default function Checkout() {
 
   return (
     <>
-      <SEO title="Checkout - ALWAHA | Secure & Convenient Shopping" description="Complete your ALWAHA order with multiple payment options." />
+      <SEO title="Checkout - E-Hookan | Secure & Convenient Shopping" description="Complete your E-Hookan order with multiple payment options." />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <button onClick={() => navigate('/cart')} className="flex items-center text-gray-600 hover:text-gray-900 mb-6">

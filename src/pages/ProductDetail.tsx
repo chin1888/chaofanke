@@ -155,7 +155,7 @@ export default function ProductDetail() {
     if (!product || likeLoading) return;
     const userId = localStorage.getItem('user_id');
     if (!userId) {
-      alert('Please login to like');
+      navigate('/login');
       return;
     }
     setLikeLoading(true);
@@ -196,8 +196,32 @@ export default function ProductDetail() {
     if (!product) return;
     const userId = localStorage.getItem('user_id') || 'anonymous';
     const username = localStorage.getItem('username') || '默认用户';
+    const shareUrl = `${window.location.origin}/products/${product.slug}`;
+    const shareText = `${product.name} - ${product.short_description}`;
+
+    // Record share in database
     await supabase.from('product_shares').insert({ product_id: product.id, platform, user_id: userId, username });
     setProduct({ ...product, shares_count: (product.shares_count || 0) + 1 });
+
+    // Actually open share dialog
+    switch (platform) {
+      case 'wechat':
+        // Copy share text for WeChat
+        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+        alert('Link copied! Paste it in WeChat to share.');
+        break;
+      case 'weibo':
+        window.open(`https://service.weibo.com/share/share.php?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}`, '_blank');
+        break;
+      case 'facebook':
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+        break;
+      case 'twitter':
+        window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+        break;
+      default:
+        break;
+    }
     setShowShareMenu(false);
   };
 
@@ -235,7 +259,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-white">
-      <SEO title={`${product.name} - ALWAHA`} description={product.short_description} />
+      <SEO title={`${product.name} - E-Hookan`} description={product.short_description} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
@@ -324,8 +348,22 @@ export default function ProductDetail() {
                 <AnimatePresence>
                   {showShareMenu && (
                     <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 p-2 z-20 min-w-[160px]">
-                      <button onClick={() => handleShare('wechat')} className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg text-sm">WeChat</button>
-                      <button onClick={() => handleShare('weibo')} className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg text-sm">Weibo</button>
+                      <button onClick={() => handleShare('wechat')} className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg text-sm flex items-center gap-2">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#07C160"><path d="M8.5 11.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm7 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM12 2C6.48 2 2 6.03 2 11c0 2.76 1.36 5.22 3.5 6.83V22l4.07-2.24c.76.21 1.57.35 2.43.35 5.52 0 10-4.03 10-9s-4.48-9-10-9z"/></svg>
+                        WeChat
+                      </button>
+                      <button onClick={() => handleShare('weibo')} className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg text-sm flex items-center gap-2">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#E6162D"><path d="M10.6 5.35c-.07-.62.33-1.17.98-1.17.4 0 .78.21.98.62.73 1.57 2.11 2.78 3.83 3.21 1.23.3 2.52-.26 3.01-1.35.19-.41.26-.86.19-1.31-.38-2.56-2.64-4.44-5.26-4.44-1.55 0-3.02.73-3.96 1.91-.19.23-.31.5-.31.79 0 .69.56 1.25 1.25 1.25.31 0 .6-.12.83-.32.36-.34.55-.8.55-1.28.04-.59-.26-1.13-.76-1.44-.07-.04-.12-.1-.12-.18 0-.1.1-.18.21-.18.52-.04 1.02.17 1.37.55.34.38.53.87.53 1.38 0 .52-.19 1.01-.54 1.38-.35.37-.81.59-1.3.59-.49 0-.96-.21-1.3-.58-.35-.37-.54-.86-.54-1.38 0-.24.04-.48.13-.71.04-.09.13-.15.23-.15.12 0 .2.09.2.2z"/></svg>
+                        Weibo
+                      </button>
+                      <button onClick={() => handleShare('facebook')} className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg text-sm flex items-center gap-2">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        Facebook
+                      </button>
+                      <button onClick={() => handleShare('twitter')} className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg text-sm flex items-center gap-2">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#1DA1F2"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                        Twitter / X
+                      </button>
                       <button onClick={copyLink} className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg text-sm flex items-center gap-2">
                         <Link2 className="w-4 h-4" />
                         {copied ? 'Copied' : 'Copy Link'}
