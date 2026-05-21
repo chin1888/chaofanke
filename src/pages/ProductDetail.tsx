@@ -173,6 +173,10 @@ export default function ProductDetail() {
         if (error) {
           console.error('Delete error:', error);
         } else {
+          // Also remove from user_favorites
+          await supabase.from('user_favorites').delete()
+            .eq('product_id', product.id)
+            .eq('user_id', userId);
           const { count } = await supabase.from('product_likes').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
           setProduct(prev => prev ? { ...prev, likes_count: count || 0 } : null);
           setLiked(false);
@@ -182,6 +186,11 @@ export default function ProductDetail() {
         if (error) {
           console.error('Insert error:', error);
         } else {
+          // Also add to user_favorites
+          await supabase.from('user_favorites').insert({
+            user_id: userId,
+            product_id: product.id
+          });
           const { count } = await supabase.from('product_likes').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
           setProduct(prev => prev ? { ...prev, likes_count: count || 0 } : null);
           setLiked(true);
