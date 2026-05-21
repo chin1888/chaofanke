@@ -31,42 +31,59 @@ export default function Register() {
 
     setLoading(true);
 
-    const email = formData.email || `${formData.username}@meoo.local`;
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password: formData.password,
-      options: {
-        data: { username: formData.username, phone: formData.phone }
+    try {
+      const email = formData.email || `${formData.username}@meoo.local`;
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: formData.password,
+        options: {
+          data: { username: formData.username, phone: formData.phone }
+        }
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
       }
-    });
 
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      return;
-    }
+      if (!data.user) {
+        setError('Registration failed: no user data returned');
+        setLoading(false);
+        return;
+      }
 
-    if (data.user) {
       const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user.id,
         username: formData.username,
         email: email,
         phone: formData.phone || null
       });
+
       if (profileError) {
         console.error('Profile insert error:', profileError);
+        setError('Account created, but profile save failed. Please contact support.');
+        setLoading(false);
+        return;
       }
+
       const { error: roleError } = await supabase.from('user_roles').insert({
         user_id: data.user.id,
         role: 'user'
       });
+
       if (roleError) {
         console.error('Role insert error:', roleError);
       }
-      navigate('/login');
-    }
 
-    setLoading(false);
+      navigate('/login');
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError('Registration failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
