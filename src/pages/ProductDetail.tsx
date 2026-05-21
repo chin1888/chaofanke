@@ -58,95 +58,122 @@ export default function ProductDetail() {
 
   const recordProductView = async () => {
     if (!slug) return;
-    const { data: productData } = await supabase
-      .from('products')
-      .select('id')
-      .eq('slug', slug)
-      .single();
-    if (productData) {
-      const userId = localStorage.getItem('user_id');
-      const sessionId = localStorage.getItem('session_id') || Math.random().toString(36).substring(2);
-      if (!localStorage.getItem('session_id')) {
-        localStorage.setItem('session_id', sessionId);
-      }
-      const { data: existingView } = await supabase
-        .from('product_views')
-        .select('*')
-        .eq('product_id', productData.id)
-        .eq(userId ? 'user_id' : 'session_id', userId || sessionId)
-        .maybeSingle();
-      if (existingView) {
-        await supabase
+    try {
+      const { data: productData } = await supabase
+        .from('products')
+        .select('id')
+        .eq('slug', slug)
+        .single();
+      if (productData) {
+        const userId = localStorage.getItem('user_id');
+        const sessionId = localStorage.getItem('session_id') || Math.random().toString(36).substring(2);
+        if (!localStorage.getItem('session_id')) {
+          localStorage.setItem('session_id', sessionId);
+        }
+        const { data: existingView } = await supabase
           .from('product_views')
-          .update({
-            view_count: (existingView.view_count || 0) + 1,
+          .select('*')
+          .eq('product_id', productData.id)
+          .eq(userId ? 'user_id' : 'session_id', userId || sessionId)
+          .maybeSingle();
+        if (existingView) {
+          await supabase
+            .from('product_views')
+            .update({
+              view_count: (existingView.view_count || 0) + 1,
+              last_viewed_at: new Date().toISOString()
+            })
+            .eq('id', existingView.id);
+        } else {
+          const { error: insertError } = await supabase.from('product_views').insert({
+            product_id: productData.id,
+            user_id: userId,
+            session_id: sessionId,
+            view_count: 1,
             last_viewed_at: new Date().toISOString()
-          })
-          .eq('id', existingView.id);
-      } else {
-        const { error: insertError } = await supabase.from('product_views').insert({
-          product_id: productData.id,
-          user_id: userId,
-          session_id: sessionId,
-          view_count: 1,
-          last_viewed_at: new Date().toISOString()
-        });
-        if (insertError && insertError.code !== '23505') {
-          console.error('Record view error:', insertError);
+          });
+          if (insertError && insertError.code !== '23505') {
+            console.error('Record view error:', insertError);
+          }
         }
       }
+    } catch (err) {
+      console.error('recordProductView error:', err);
     }
   };
 
   const fetchProduct = async () => {
-    if (!slug) return;
-    const { data } = await supabase
-      .from('products')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-    if (data) {
-      setProduct(data as Product);
-      fetchDetailPage(data.id);
-      fetchRelatedProducts(data.category_id, data.id);
+    if (!slug) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+      if (error) {
+        console.error('fetchProduct error:', error);
+      } else if (data) {
+        setProduct(data as Product);
+        fetchDetailPage(data.id);
+        fetchRelatedProducts(data.category_id, data.id);
+      }
+    } catch (err) {
+      console.error('fetchProduct exception:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchDetailPage = async (productId: string) => {
-    const { data } = await supabase
-      .from('product_detail_pages')
-      .select('content')
-      .eq('product_id', productId)
-      .eq('is_active', true)
-      .maybeSingle();
-    if (data) setDetailPage(data as DetailPage);
+    try {
+      const { data } = await supabase
+        .from('product_detail_pages')
+        .select('content')
+        .eq('product_id', productId)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (data) setDetailPage(data as DetailPage);
+    } catch (err) {
+      console.error('fetchDetailPage error:', err);
+    }
   };
 
   const fetchRelatedProducts = async (categoryId: string, currentProductId: string) => {
-    const { data } = await supabase
-      .from('products')
-      .select('id, name, slug, price, original_price, images, short_description, likes_count, shares_count')
-      .eq('category_id', categoryId)
-      .eq('is_active', true)
-      .neq('id', currentProductId)
-      .limit(4);
-    setRelatedProducts(data as Product[] || []);
+    try {
+      const { data } = await supabase
+        .from('products')
+        .select('id, name, slug, price, original_price, images, short_description, likes_count, shares_count')
+        .eq('category_id', categoryId)
+        .eq('is_active', true)
+        .neq('id', currentProductId)
+        .limit(4);
+      setRelatedProducts(data as Product[] || []);
+    } catch (err) {
+      console.error('fetchRelatedProducts error:', err);
+    }
   };
 
   const checkIfLiked = async () => {
-    const userId = localStorage.getItem('user_id');
-    if (!product || !userId) {
+    try {
+      const userId = localStorage.getItem('user_id');
+      if (!product || !userId) {
+        setLiked(false);
+        return;
+      }
+      const { data } = await supabase
+        .from('product_likes')
+        .select('*')
+        .eq('product_id', product.id)
+        .eq('user_id', userId)
+        .maybeSingle();
+      setLiked(!!data);
+    } catch (err) {
+      console.error('checkIfLiked error:', err);
       setLiked(false);
-      return;
     }
-    const { data } = await supabase
-      .from('product_likes')
-      .select('*')
-      .eq('product_id', product.id)
-      .eq('user_id', userId)
-      .maybeSingle();
-    setLiked(!!data);
   };
 
   const [likeLoading, setLikeLoading] = useState(false);
@@ -196,6 +223,8 @@ export default function ProductDetail() {
           setLiked(true);
         }
       }
+    } catch (err) {
+      console.error('handleLike error:', err);
     } finally {
       setLikeLoading(false);
     }
@@ -208,9 +237,13 @@ export default function ProductDetail() {
     const shareUrl = `${window.location.origin}/products/${product.slug}`;
     const shareText = `${product.name} - ${product.short_description}`;
 
-    // Record share in database
-    await supabase.from('product_shares').insert({ product_id: product.id, platform, user_id: userId, username });
-    setProduct({ ...product, shares_count: (product.shares_count || 0) + 1 });
+    try {
+      // Record share in database
+      await supabase.from('product_shares').insert({ product_id: product.id, platform, user_id: userId, username });
+      setProduct({ ...product, shares_count: (product.shares_count || 0) + 1 });
+    } catch (err) {
+      console.error('handleShare error:', err);
+    }
 
     // Actually open share dialog
     switch (platform) {
