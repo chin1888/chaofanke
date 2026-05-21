@@ -104,3 +104,4 @@ obj/
 .stats
 .config
 .accesslog
+.vercel

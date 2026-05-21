@@ -32,10 +32,10 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const email = formData.email || `${formData.username}@meoo.local`;
+      const authEmail = `${formData.username}@meoo.local`;
 
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: authEmail,
         password: formData.password,
         options: {
           data: { username: formData.username, phone: formData.phone }
@@ -58,7 +58,7 @@ export default function Register() {
       const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user.id,
         username: formData.username,
-        email: email,
+        email: formData.email || null,
         phone: formData.phone || null
       });
 
