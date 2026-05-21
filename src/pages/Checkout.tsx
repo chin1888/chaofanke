@@ -102,6 +102,21 @@ export default function Checkout() {
       return;
     }
 
+    // Check stock availability before creating order
+    for (const item of items) {
+      const { data: product } = await supabase
+        .from('products')
+        .select('stock, name')
+        .eq('id', item.id)
+        .single();
+
+      if (!product || (product.stock ?? 0) < item.quantity) {
+        alert(`Insufficient stock for "${item.name}". Available: ${product?.stock ?? 0}, Requested: ${item.quantity}`);
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const { data: order, error } = await supabase
       .from('orders')
@@ -130,6 +145,24 @@ export default function Checkout() {
         total_price: item.price * item.quantity,
       }));
       await supabase.from('order_items').insert(orderItems);
+
+      // Deduct stock for each item
+      for (const item of items) {
+        const { data: product } = await supabase
+          .from('products')
+          .select('stock')
+          .eq('id', item.id)
+          .single();
+        const newStock = Math.max((product?.stock ?? 0) - item.quantity, 0);
+        const { error: stockError } = await supabase
+          .from('products')
+          .update({ stock: newStock })
+          .eq('id', item.id);
+        if (stockError) {
+          console.error('Stock deduction error for', item.name, ':', stockError);
+        }
+      }
+
       clearCart();
       navigate(`/payment?orderId=${order.id}&amount=${totalPrice}&orderNumber=${encodeURIComponent(orderNumber)}`);
     } else {
