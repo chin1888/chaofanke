@@ -204,8 +204,12 @@ export default function ProductDetail() {
           await supabase.from('user_favorites').delete()
             .eq('product_id', product.id)
             .eq('user_id', userId);
-          const { count } = await supabase.from('product_likes').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
-          setProduct(prev => prev ? { ...prev, likes_count: count || 0 } : null);
+          const { count, error: countError } = await supabase.from('product_likes').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
+          if (countError) console.error('Count error:', countError);
+          const newCount = count || 0;
+          // Sync to products table so count persists across page loads
+          await supabase.from('products').update({ likes_count: newCount }).eq('id', product.id);
+          setProduct(prev => prev ? { ...prev, likes_count: newCount } : null);
           setLiked(false);
         }
       } else {
@@ -218,8 +222,12 @@ export default function ProductDetail() {
             user_id: userId,
             product_id: product.id
           });
-          const { count } = await supabase.from('product_likes').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
-          setProduct(prev => prev ? { ...prev, likes_count: count || 0 } : null);
+          const { count, error: countError } = await supabase.from('product_likes').select('*', { count: 'exact', head: true }).eq('product_id', product.id);
+          if (countError) console.error('Count error:', countError);
+          const newCount = count || 0;
+          // Sync to products table so count persists across page loads
+          await supabase.from('products').update({ likes_count: newCount }).eq('id', product.id);
+          setProduct(prev => prev ? { ...prev, likes_count: newCount } : null);
           setLiked(true);
         }
       }
@@ -240,7 +248,10 @@ export default function ProductDetail() {
     try {
       // Record share in database
       await supabase.from('product_shares').insert({ product_id: product.id, platform, user_id: userId, username });
-      setProduct({ ...product, shares_count: (product.shares_count || 0) + 1 });
+      const newSharesCount = (product.shares_count || 0) + 1;
+      // Sync to products table
+      await supabase.from('products').update({ shares_count: newSharesCount }).eq('id', product.id);
+      setProduct(prev => prev ? { ...prev, shares_count: newSharesCount } : null);
     } catch (err) {
       console.error('handleShare error:', err);
     }
