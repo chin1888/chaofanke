@@ -150,7 +150,22 @@ export default function ProductDetail() {
         .eq('is_active', true)
         .neq('id', currentProductId)
         .limit(4);
-      setRelatedProducts(data as Product[] || []);
+
+      // Get real-time counts
+      const productsWithRealCounts = await Promise.all(
+        (data || []).map(async (product) => {
+          const [{ count: likesCount }, { count: sharesCount }] = await Promise.all([
+            supabase.from('product_likes').select('*', { count: 'exact', head: true }).eq('product_id', product.id),
+            supabase.from('product_shares').select('*', { count: 'exact', head: true }).eq('product_id', product.id)
+          ]);
+          return {
+            ...product,
+            likes_count: likesCount ?? product.likes_count ?? 0,
+            shares_count: sharesCount ?? product.shares_count ?? 0
+          };
+        })
+      );
+      setRelatedProducts(productsWithRealCounts as Product[]);
     } catch (err) {
       console.error('fetchRelatedProducts error:', err);
     }

@@ -107,16 +107,51 @@ export default function Profile() {
     const { data: productsData } = await supabase
       .from('products')
       .select('id, name, slug, price, images, likes_count, shares_count')
+      .eq('is_active', true)
       .order('likes_count', { ascending: false })
       .limit(4);
-    setRecommendedProducts(productsData || []);
+
+    // Get real-time counts from product_likes / product_shares (fallback if triggers not applied yet)
+    const productsWithRealCounts = await Promise.all(
+      (productsData || []).map(async (product) => {
+        const [{ count: likesCount }, { count: sharesCount }] = await Promise.all([
+          supabase.from('product_likes').select('*', { count: 'exact', head: true }).eq('product_id', product.id),
+          supabase.from('product_shares').select('*', { count: 'exact', head: true }).eq('product_id', product.id)
+        ]);
+        return {
+          ...product,
+          likes_count: likesCount || product.likes_count || 0,
+          shares_count: sharesCount || product.shares_count || 0
+        };
+      })
+    );
+    setRecommendedProducts(productsWithRealCounts);
 
     const { data: favoritesData } = await supabase
       .from('user_favorites')
       .select('*, product:products(id, name, price, images, likes_count, shares_count, slug)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    setFavorites(favoritesData || []);
+
+    // Get real-time counts for favorite products
+    const favoritesWithRealCounts = await Promise.all(
+      (favoritesData || []).map(async (fav) => {
+        if (!fav.product) return fav;
+        const [{ count: likesCount }, { count: sharesCount }] = await Promise.all([
+          supabase.from('product_likes').select('*', { count: 'exact', head: true }).eq('product_id', fav.product.id),
+          supabase.from('product_shares').select('*', { count: 'exact', head: true }).eq('product_id', fav.product.id)
+        ]);
+        return {
+          ...fav,
+          product: {
+            ...fav.product,
+            likes_count: likesCount ?? fav.product.likes_count ?? 0,
+            shares_count: sharesCount ?? fav.product.shares_count ?? 0
+          }
+        };
+      })
+    );
+    setFavorites(favoritesWithRealCounts);
 
     setLoading(false);
   };
