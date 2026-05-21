@@ -48,8 +48,9 @@ export default function Register() {
         return;
       }
 
+      // When email confirmation is enabled, user is null but signUpError is also null
       if (!data.user) {
-        setError('Registration failed: no user data returned');
+        setError('Registration submitted! Please check your email to confirm your account, then log in.');
         setLoading(false);
         return;
       }
