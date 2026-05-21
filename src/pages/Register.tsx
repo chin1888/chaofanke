@@ -64,7 +64,7 @@ export default function Register() {
 
       if (profileError) {
         console.error('Profile insert error:', profileError);
-        setError('Account created, but profile save failed. Please contact support.');
+        setError('Profile save failed: ' + (profileError.message || profileError.code || 'Unknown error'));
         setLoading(false);
         return;
       }
