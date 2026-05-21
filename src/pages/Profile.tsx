@@ -5,6 +5,7 @@ import { User, Package, MapPin, Settings, LogOut, X, Plus, Trash2, Star, Chevron
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../supabase/client';
 import AddressSelector from '../components/AddressSelector';
+import MembershipBadge from '../components/MembershipBadge';
 
 interface OrderItem {
   id: string;
@@ -388,8 +389,8 @@ export default function Profile() {
                       <p className="text-2xl font-bold">{addresses.length}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-gray-500 text-sm">Membership</p>
-                      <p className="text-2xl font-bold">Standard</p>
+                      <p className="text-gray-500 text-sm mb-2">Membership</p>
+                      <MembershipBadge tier="standard" />
                     </div>
                   </div>
 
