@@ -309,6 +309,7 @@ export default function AdminProducts() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -329,6 +330,44 @@ export default function AdminProducts() {
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
+  };
+
+  const isAllSelected = paginatedProducts.length > 0 && paginatedProducts.every(p => selectedIds.has(p.id));
+  const isPartialSelected = paginatedProducts.some(p => selectedIds.has(p.id)) && !isAllSelected;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      const newSet = new Set(selectedIds);
+      paginatedProducts.forEach(p => newSet.delete(p.id));
+      setSelectedIds(newSet);
+    } else {
+      const newSet = new Set(selectedIds);
+      paginatedProducts.forEach(p => newSet.add(p.id));
+      setSelectedIds(newSet);
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.size} selected product(s)? This cannot be undone.`)) return;
+    const idsToDelete = Array.from(selectedIds);
+    const { error } = await supabase.from('products').delete().in('id', idsToDelete);
+    if (error) {
+      alert('Batch delete failed: ' + error.message);
+      return;
+    }
+    setSelectedIds(new Set());
+    fetchProducts();
   };
 
   const menuItems = [
@@ -407,12 +446,45 @@ export default function AdminProducts() {
             </select>
           </div>
 
+          {/* Batch action bar */}
+          {selectedIds.size > 0 && (
+            <div className="px-6 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
+              <span className="text-sm text-red-700 font-medium">
+                {selectedIds.size} item(s) selected
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBatchDelete}
+                  className="flex items-center gap-1.5 text-sm text-white bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Selected ({selectedIds.size})
+                </button>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="p-8 text-center text-gray-500">Loading...</div>
           ) : (
             <div className="divide-y divide-gray-200">
               <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 text-sm font-medium text-gray-600">
-                <div className="col-span-4">Product Info</div>
+                <div className="col-span-1 flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    ref={el => { if (el) el.indeterminate = isPartialSelected; }}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                  />
+                </div>
+                <div className="col-span-3">Product Info</div>
                 <div className="col-span-1 text-center">Price</div>
                 <div className="col-span-1 text-center">Stock</div>
                 <div className="col-span-1 text-center">Sales</div>
@@ -421,8 +493,16 @@ export default function AdminProducts() {
                 <div className="col-span-2 text-right">Actions</div>
               </div>
               {paginatedProducts.map((product) => (
-                <div key={product.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50">
-                  <div className="col-span-4 flex items-center gap-3">
+                <div key={product.id} className={`grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors ${selectedIds.has(product.id) ? 'bg-blue-50' : ''}`}>
+                  <div className="col-span-1 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(product.id)}
+                      onChange={() => toggleSelectOne(product.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                    />
+                  </div>
+                  <div className="col-span-3 flex items-center gap-3">
                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                       {product.images && product.images.length > 0 ? (
                         <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
