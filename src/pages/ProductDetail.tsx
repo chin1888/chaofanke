@@ -29,12 +29,19 @@ interface DetailPage {
   content: string;
 }
 
+interface DetailBlock {
+  type: 'image' | 'text';
+  url?: string;
+  content?: string;
+}
+
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [detailPage, setDetailPage] = useState<DetailPage | null>(null);
+  const [detailBlocks, setDetailBlocks] = useState<DetailBlock[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -131,11 +138,17 @@ export default function ProductDetail() {
     try {
       const { data } = await supabase
         .from('product_detail_pages')
-        .select('content')
+        .select('content, layout')
         .eq('product_id', productId)
         .eq('is_active', true)
         .maybeSingle();
-      if (data) setDetailPage(data as DetailPage);
+      if (data) {
+        setDetailPage(data as DetailPage);
+        const blocks = (data as any).layout;
+        if (Array.isArray(blocks)) {
+          setDetailBlocks(blocks as DetailBlock[]);
+        }
+      }
     } catch (err) {
       console.error('fetchDetailPage error:', err);
     }
@@ -372,17 +385,6 @@ export default function ProductDetail() {
 
             <div className="space-y-4 pt-4 border-t border-gray-200">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Variant</label>
-                <div className="flex gap-3">
-                  {['Standard', 'Deluxe'].map((variant) => (
-                    <motion.button key={variant} onClick={() => setSelectedVariant(variant)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className={`px-6 py-3 rounded-xl border-2 font-medium transition-all ${selectedVariant === variant ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 hover:border-gray-400'}`}>
-                      {variant}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border-2 border-gray-900 rounded-xl">
@@ -486,6 +488,39 @@ export default function ProductDetail() {
             )}
           </div>
         </div>
+
+        {/* ========== Product Detail Content / 商品详情 ========== */}
+        {detailBlocks.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-16">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-1 h-8 bg-gray-900 rounded-full" />
+              <h2 className="text-2xl font-bold text-gray-900">Product Details</h2>
+            </div>
+            <div className="space-y-8">
+              {detailBlocks.map((block, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  {block.type === 'image' && block.url && (
+                    <div className="rounded-2xl overflow-hidden bg-gray-50">
+                      <img src={block.url} alt="Product detail" className="w-full h-auto object-contain" />
+                    </div>
+                  )}
+                  {block.type === 'text' && block.content && (
+                    <div
+                      className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-strong:text-gray-900 prose-li:text-gray-600"
+                      dangerouslySetInnerHTML={{ __html: block.content }}
+                    />
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {detailPage?.content && (
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-16 border-t pt-12">

@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit2, Trash2, ArrowLeft, Shield, User, LayoutDashboard, FileText, TrendingUp, ShoppingCart, Package, Image as ImageIcon, BarChart3, Users, Star, CreditCard, LogOut } from 'lucide-react';
 import { supabase } from '../../supabase/client';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import AdminSidebar from '../../components/admin/AdminSidebar';
 
 interface Admin {
   id: string;
@@ -12,20 +14,6 @@ interface Admin {
   is_active: boolean;
   created_at: string;
 }
-
-const menuItems = [
-  { name: 'Common', path: '/admin', icon: LayoutDashboard },
-  { name: 'Overview', path: '/admin/user-stats', icon: FileText },
-  { name: 'Traffic', path: '/admin/traffic-stats', icon: TrendingUp },
-  { name: 'Sales', path: '/admin/orders', icon: ShoppingCart },
-  { name: 'Products', path: '/admin/products', icon: Package },
-  { name: 'Banners', path: '/admin/banners', icon: ImageIcon },
-  { name: 'Categories', path: '/admin/categories', icon: BarChart3 },
-  { name: 'Users', path: '/admin/users', icon: Users },
-  { name: 'Reviews', path: '/admin/reviews', icon: Star },
-  { name: 'Payments', path: '/admin/payment-gateways', icon: CreditCard },
-];
-
 export default function AdminAdmins() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,42 +84,11 @@ export default function AdminAdmins() {
     setFormData({ username: '', password: '', role: 'admin', is_active: true });
     setShowModal(true);
   };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-  };
-
   if (loading) return <div className="p-8">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-56 bg-blue-50 min-h-screen flex flex-col">
-        <div className="p-4">
-          <h1 className="text-lg font-bold text-gray-800">Admin Panel</h1>
-        </div>
-        <nav className="flex-1 px-2">
-          {menuItems.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => navigate(item.path)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-blue-100 rounded-lg transition-colors text-left`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-base font-medium">{item.name}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-blue-100">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-blue-100 rounded-lg transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium">Logout</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar />
 
       <main className="flex-1 overflow-auto p-8">
         <div className="flex items-center justify-between mb-8">

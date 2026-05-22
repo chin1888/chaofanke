@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -27,11 +28,13 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Users from './pages/admin/Users';
 import AdminAdmins from './pages/admin/Admins';
+import ProductEdit from './pages/admin/ProductEdit';
 import Profile from './pages/Profile';
 import './styles/index.css';
 
 function App() {
   return (
+    <LanguageProvider>
     <AuthProvider>
       <UserProvider>
         <CartProvider>
@@ -50,6 +53,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/product-publish" element={<ProductPublish />} />
             <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/products/:id/edit" element={<ProductEdit />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/banners" element={<AdminBanners />} />
@@ -67,6 +71,7 @@ function App() {
       </CartProvider>
       </UserProvider>
     </AuthProvider>
+    </LanguageProvider>
   );
 }
 

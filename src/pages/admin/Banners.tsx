@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, ArrowLeft, Image as ImageIcon, Upload, X, Package, ShoppingCart, Users, Star, LogOut, TrendingUp, FileText, CreditCard, LayoutDashboard, BarChart3 } from 'lucide-react';
 import { supabase } from '../../supabase/client';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import AdminSidebar from '../../components/admin/AdminSidebar';
 import { decode } from 'base64-arraybuffer';
 
 interface Banner {
@@ -16,20 +18,6 @@ interface Banner {
   sort_order: number;
   is_active: boolean;
 }
-
-const menuItems = [
-  { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-  { name: 'Overview', path: '/admin/user-stats', icon: FileText },
-  { name: 'Traffic', path: '/admin/traffic-stats', icon: TrendingUp },
-  { name: 'Sales', path: '/admin/orders', icon: ShoppingCart },
-  { name: 'Products', path: '/admin/products', icon: Package },
-  { name: 'Banners', path: '/admin/banners', icon: ImageIcon },
-  { name: 'Categories', path: '/admin/categories', icon: BarChart3 },
-  { name: 'Users', path: '/admin/users', icon: Users },
-  { name: 'Reviews', path: '/admin/reviews', icon: Star },
-  { name: 'Payments', path: '/admin/payment-gateways', icon: CreditCard },
-];
-
 export default function AdminBanners() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,44 +105,11 @@ export default function AdminBanners() {
     setFormData({ title: '', subtitle: '', image_url: '', link_url: '', position: 'home', sort_order: 0, is_active: true });
     setShowModal(true);
   };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-  };
-
   if (!isAuthenticated) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-56 bg-blue-50 min-h-screen flex flex-col">
-        <div className="p-4">
-          <h1 className="text-lg font-bold text-gray-800">Admin Panel</h1>
-        </div>
-        <nav className="flex-1 px-2">
-          {menuItems.map((item, index) => (
-            <button
-              key={item.name}
-              onClick={() => navigate(item.path)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-blue-100 rounded-lg transition-colors text-left ${
-                location.pathname === item.path ? 'bg-blue-100 text-blue-700' : ''
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-base font-medium">{item.name}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-blue-100">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-blue-100 rounded-lg transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium">Logout</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar />
 
       <main className="flex-1 overflow-auto p-8">
         <div className="flex items-center justify-between mb-6">

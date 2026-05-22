@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, ArrowLeft, X, Upload, Trash2, MoreHorizontal, Eye, Link2, LayoutDashboard, BarChart3, Users, Package, Image, Grid3X3, MessageSquare, CreditCard, TrendingUp, FileText, ShoppingCart, Star } from 'lucide-react';
 import { supabase } from '../../supabase/client';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import AdminSidebar from '../../components/admin/AdminSidebar';
 import { decode } from 'base64-arraybuffer';
 
 interface Product {
@@ -37,6 +39,8 @@ export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [cnyToUsd, setCnyToUsd] = useState<number | null>(null);
+  const [rateLoading, setRateLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -56,6 +60,24 @@ export default function AdminProducts() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  // 获取 CNY→USD 实时汇率
+  const fetchExchangeRate = async () => {
+    setRateLoading(true);
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/CNY');
+      const data = await res.json();
+      if (data && data.rates && data.rates.USD) {
+        setCnyToUsd(data.rates.USD);
+      } else {
+        // 备用汇率
+        setCnyToUsd(0.138);
+      }
+    } catch {
+      setCnyToUsd(0.138);
+    }
+    setRateLoading(false);
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/admin/login');
@@ -63,6 +85,7 @@ export default function AdminProducts() {
     }
     fetchProducts();
     fetchCategories();
+    fetchExchangeRate();
   }, [isAuthenticated, navigate]);
 
   const fetchProducts = async () => {
@@ -200,11 +223,16 @@ export default function AdminProducts() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const rate = cnyToUsd ?? 0.138;
+    const priceUsd = parseFloat((parseFloat(formData.price) * rate).toFixed(2));
+    const originalPriceUsd = formData.original_price
+      ? parseFloat((parseFloat(formData.original_price) * rate).toFixed(2))
+      : null;
     const payload = {
       name: formData.name,
       slug: formData.slug,
-      price: parseFloat(formData.price),
-      original_price: formData.original_price ? parseFloat(formData.original_price) : null,
+      price: priceUsd,
+      original_price: originalPriceUsd,
       stock: parseInt(formData.stock),
       category_id: formData.category_id || null,
       description: formData.description,
@@ -274,11 +302,15 @@ export default function AdminProducts() {
 
   const openEdit = (product: Product) => {
     setEditingProduct(product);
+    const rate = cnyToUsd ?? 0.138;
+    // 数据库存 USD，编辑时反向换算为 CNY 显示
+    const priceCny = (product.price / rate).toFixed(2);
+    const originalPriceCny = product.original_price ? (product.original_price / rate).toFixed(2) : '';
     setFormData({
       name: product.name,
       slug: product.slug,
-      price: product.price.toString(),
-      original_price: product.original_price?.toString() || '',
+      price: priceCny,
+      original_price: originalPriceCny,
       stock: product.stock.toString(),
       category_id: product.category_id || '',
       description: product.description || '',
@@ -369,50 +401,9 @@ export default function AdminProducts() {
     setSelectedIds(new Set());
     fetchProducts();
   };
-
-  const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-    { name: 'Overview', icon: FileText, path: '/admin/user-stats' },
-    { name: 'Traffic', icon: TrendingUp, path: '/admin/traffic-stats' },
-    { name: 'Sales', icon: ShoppingCart, path: '/admin/orders' },
-    { name: 'Products', icon: Package, path: '/admin/products' },
-    { name: 'Banners', icon: Image, path: '/admin/banners' },
-    { name: 'Categories', icon: BarChart3, path: '/admin/categories' },
-    { name: 'Users', icon: Users, path: '/admin/users' },
-    { name: 'Reviews', icon: Star, path: '/admin/reviews' },
-    { name: 'Payments', icon: CreditCard, path: '/admin/payment-gateways' },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-56 bg-blue-50 min-h-screen flex flex-col">
-        <div className="p-4">
-          <h1 className="text-lg font-bold text-gray-800">Admin Panel</h1>
-        </div>
-        <nav className="flex-1 px-2">
-          {menuItems.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => navigate(item.path)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-blue-100 rounded-lg transition-colors text-left ${
-                location.pathname === item.path ? 'bg-blue-100 text-blue-700' : ''
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-base font-medium">{item.name}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-blue-100">
-          <button
-            onClick={() => navigate('/admin/login')}
-            className="w-full flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-blue-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Logout</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar />
 
       <div className="flex-1 p-8">
         <div className="flex items-center justify-between mb-8">
@@ -485,12 +476,12 @@ export default function AdminProducts() {
                   />
                 </div>
                 <div className="col-span-3">Product Info</div>
+                <div className="col-span-1 text-center">Category</div>
                 <div className="col-span-1 text-center">Price</div>
                 <div className="col-span-1 text-center">Stock</div>
                 <div className="col-span-1 text-center">Sales</div>
                 <div className="col-span-1 text-center">Status</div>
-                <div className="col-span-2 text-center">Created At</div>
-                <div className="col-span-2 text-right">Actions</div>
+                <div className="col-span-3 text-right">Actions</div>
               </div>
               {paginatedProducts.map((product) => (
                 <div key={product.id} className={`grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors ${selectedIds.has(product.id) ? 'bg-blue-50' : ''}`}>
@@ -503,26 +494,36 @@ export default function AdminProducts() {
                     />
                   </div>
                   <div className="col-span-3 flex items-center gap-3">
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                       {product.images && product.images.length > 0 ? (
                         <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="text-gray-400 text-xs">No Image</div>
                       )}
                     </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{product.name}</div>
-                      <div className="text-xs text-gray-500 mt-1">ID:{product.id.slice(0, 8)}...</div>
-                      <div className="flex gap-2 mt-2">
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded">In Stock</span>
-                        <button className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
-                          <Eye className="w-3 h-3" /> Preview
-                        </button>
-                        <button className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
-                          <Link2 className="w-3 h-3" /> Copy Link
-                        </button>
+                    <div className="min-w-0">
+                      <div className="font-medium text-gray-900 truncate">{product.name}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">ID:{product.id.slice(0, 8)}...</div>
+                      {product.short_description && (
+                        <div className="text-xs text-gray-500 mt-1 truncate">{product.short_description}</div>
+                      )}
+                      {product.description && !product.short_description && (
+                        <div className="text-xs text-gray-500 mt-1 truncate">{product.description.slice(0, 60)}</div>
+                      )}
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className={`px-2 py-0.5 text-xs rounded ${product.images && product.images.length > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                          {product.images?.length || 0} img
+                        </span>
+                        <span className="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-600">
+                          {product.features?.length || 0} feat
+                        </span>
                       </div>
                     </div>
+                  </div>
+                  <div className="col-span-1 text-center">
+                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                      {product.category?.name || '-'}
+                    </span>
                   </div>
                   <div className="col-span-1 text-center text-gray-900">${product.price}</div>
                   <div className="col-span-1 text-center text-gray-900">{product.stock}</div>
@@ -533,35 +534,26 @@ export default function AdminProducts() {
                       <span className="text-sm text-gray-600">{product.is_active ? 'Active' : 'Inactive'}</span>
                     </div>
                   </div>
-                  <div className="col-span-2 text-center text-sm text-gray-500">
-                    {product.created_at ? new Date(product.created_at).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\//g, '/') : '-'}
-                  </div>
-                  <div className="col-span-2 text-right">
-                    <div className="relative group inline-block">
-                      <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        More
-                      </button>
-                      <div className="absolute right-0 top-full mt-1 w-28 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                        <button
-                          onClick={() => openEdit(product)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(product)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          {product.is_active ? 'Deactivate' : 'Activate'}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 last:rounded-b-lg"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
+                  <div className="col-span-3 flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => navigate(`/admin/products/${product.id}/edit`)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors font-medium"
+                    >
+                      <Package className="w-3.5 h-3.5" />
+                      Edit Details
+                    </button>
+                    <button
+                      onClick={() => handleToggleStatus(product)}
+                      className="px-3 py-1.5 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      {product.is_active ? 'Disable' : 'Enable'}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="px-3 py-1.5 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -626,6 +618,27 @@ export default function AdminProducts() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* 汇率提示 */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 flex items-center justify-between text-sm">
+                  <span className="text-blue-700">
+                    💱 价格输入人民币（CNY），自动换算为美元（USD）存储
+                  </span>
+                  <span className="text-blue-600 font-medium">
+                    {rateLoading ? (
+                      <span className="text-gray-400">获取汇率中...</span>
+                    ) : cnyToUsd ? (
+                      `1 CNY ≈ ${cnyToUsd.toFixed(4)} USD`
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={fetchExchangeRate}
+                        className="underline text-blue-600 hover:text-blue-800"
+                      >
+                        重新获取汇率
+                      </button>
+                    )}
+                  </span>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Product Name *</label>
@@ -639,12 +652,48 @@ export default function AdminProducts() {
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Price *</label>
-                    <input type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
+                    <label className="block text-sm font-medium mb-1">Price * <span className="text-gray-400 font-normal">(CNY ¥)</span></label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">¥</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.price}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        className="w-full pl-7 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="人民币金额"
+                        required
+                      />
+                    </div>
+                    {formData.price && cnyToUsd ? (
+                      <p className="text-xs text-green-600 mt-1">
+                        ≈ ${(parseFloat(formData.price) * cnyToUsd).toFixed(2)} USD
+                        {rateLoading && <span className="text-gray-400 ml-1">刷新中...</span>}
+                      </p>
+                    ) : rateLoading ? (
+                      <p className="text-xs text-gray-400 mt-1">获取汇率中...</p>
+                    ) : null}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Original Price</label>
-                    <input type="number" step="0.01" value={formData.original_price} onChange={(e) => setFormData({ ...formData, original_price: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
+                    <label className="block text-sm font-medium mb-1">Original Price <span className="text-gray-400 font-normal">(CNY ¥)</span></label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">¥</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.original_price}
+                        onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
+                        className="w-full pl-7 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="人民币金额"
+                      />
+                    </div>
+                    {formData.original_price && cnyToUsd ? (
+                      <p className="text-xs text-green-600 mt-1">
+                        ≈ ${(parseFloat(formData.original_price) * cnyToUsd).toFixed(2)} USD
+                      </p>
+                    ) : null}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Stock *</label>

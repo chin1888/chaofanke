@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Package, ShoppingCart, Users, Star, LogOut, TrendingUp, FileText, CreditCard, Image as ImageIcon, LayoutDashboard, BarChart3, Eye, DollarSign, TrendingUp as TrendIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import AdminSidebar from '../../components/admin/AdminSidebar';
 import { supabase } from '../../supabase/client';
 
 interface StatsData {
@@ -94,25 +96,6 @@ export default function UserStats() {
       conversionRate
     });
   };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-  };
-
-  const menuItems = [
-    { id: 1, name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-    { id: 2, name: 'Overview', path: '/admin/user-stats', icon: FileText },
-    { id: 3, name: 'Traffic', path: '/admin/traffic-stats', icon: TrendingUp },
-    { id: 4, name: 'Sales', path: '/admin/orders', icon: ShoppingCart },
-    { id: 5, name: 'Products', path: '/admin/products', icon: Package },
-    { id: 6, name: 'Banners', path: '/admin/banners', icon: ImageIcon },
-    { id: 7, name: 'Categories', path: '/admin/categories', icon: BarChart3 },
-    { id: 8, name: 'Users', path: '/admin/users', icon: Users },
-    { id: 9, name: 'Reviews', path: '/admin/reviews', icon: Star },
-    { id: 10, name: 'Payments', path: '/admin/payment-gateways', icon: CreditCard },
-  ];
-
   const statCards = [
     { title: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-50' },
     { title: 'Total Orders', value: stats.totalOrders, icon: ShoppingCart, color: 'text-green-600', bgColor: 'bg-green-50' },
@@ -127,34 +110,7 @@ export default function UserStats() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-56 bg-blue-50 min-h-screen flex flex-col">
-        <div className="p-4">
-          <h1 className="text-lg font-bold text-gray-800">Admin Panel</h1>
-        </div>
-        <nav className="flex-1 px-2">
-          {menuItems.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => navigate(item.path)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-blue-100 rounded-lg transition-colors text-left ${
-                location.pathname === item.path ? 'bg-blue-100 text-blue-700' : ''
-              }`}
-            >
-              <item.icon className="w-5 h-5 text-gray-600" />
-              <span className="text-base font-medium">{item.name}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-blue-100">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-2 text-gray-600 hover:bg-blue-100 rounded-lg transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium">Logout</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar />
 
       <main className="flex-1 overflow-auto p-6">
         <h1 className="text-2xl font-bold mb-6">Data Overview</h1>
