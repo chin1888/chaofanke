@@ -9,9 +9,9 @@ interface SEOProps {
 }
 
 export const defaultSEO = {
-  title: 'ALWAHA - Premium Elektro-Shisha ohne Kompromisse',
+  title: 'E-Hookan - Premium Elektro-Shisha ohne Kompromisse',
   description: '德国高端电子烟品牌，首款无碳电子烟，5分钟快速启动，94%更少有害物质。探索设备、烟弹和配件。',
-  keywords: 'ALWAHA,电子烟,Shisha,无碳电子烟,高端电子烟,电子烟设备,烟弹,德国品牌',
+  keywords: 'E-Hookan,电子烟,Shisha,无碳电子烟,高端电子烟,电子烟设备,烟弹,德国品牌',
   ogImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200',
 };
 

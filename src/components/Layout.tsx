@@ -12,7 +12,7 @@ export default function Layout() {
   const location = useLocation();
 
   const navLinks = [
-    { name: 'DISCOVER ALWAHA', path: '/' },
+    { name: 'DISCOVER E-Hookan', path: '/' },
     { name: 'EXPLORE FLAVORS', path: '/products' },
     { name: 'FIND US', path: '/' },
   ];
@@ -43,14 +43,14 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-white" itemScope itemType="https://schema.org/WebSite">
-      <meta itemProp="name" content="ALWAHA" />
+      <meta itemProp="name" content="E-Hookan" />
       <meta itemProp="url" content="/" />
       
       <header className="fixed top-0 left-0 right-0 z-50 bg-black" role="banner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center space-x-2" itemProp="url">
-              <span className="text-2xl font-bold tracking-tight text-white" itemProp="name">ALWAHA</span>
+              <span className="text-2xl font-bold tracking-tight text-white" itemProp="name">E-Hookan</span>
             </Link>
 
             <nav className="hidden md:flex items-center space-x-8" role="navigation" aria-label="主导航">
@@ -185,7 +185,7 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">ALWAHA</h3>
+              <h3 className="text-xl font-bold mb-4">E-Hookan</h3>
               <p className="text-gray-400 text-sm">
                 Premium Elektro-Shisha ohne Kompromisse
               </p>
@@ -222,7 +222,7 @@ export default function Layout() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 text-sm">
-            <p>&copy; 2024 ALWAHA. All rights reserved.</p>
+            <p>&copy; 2024 E-Hookan. All rights reserved.</p>
           </div>
         </div>
       </footer>
