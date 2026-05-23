@@ -586,7 +586,7 @@ export default function TrafficStats() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <SmallCard title={t('dashboard.visitors')} value={visitors} change={calcChange(visitors, prevVisitors)} icon={Users} color="#3B82F6" />
             <SmallCard title={t('dashboard.pageViews')} value={pageViews} change={calcChange(pageViews, prevPageViews)} icon={Eye} color="#10B981" />
-            <SmallCard title={t('dashboard.avgPagesPerSession')} value={Math.round(avgPages)} change={calcChange(avgPages, prevAvgPages)} icon={Activity} color="#F59E0B" />
+            <SmallCard title={t('dashboard.avgPagesSession')} value={Math.round(avgPages)} change={calcChange(avgPages, prevAvgPages)} icon={Activity} color="#F59E0B" />
             <SmallCard title={t('dashboard.returningVisitors')} value={returningVisitors} change={calcChange(returningVisitors, prevReturningVisitors)} icon={Users} color="#8B5CF6" />
             <SmallCard title={t('dashboard.newVisitors')} value={newVisitors} change={calcChange(newVisitors, prevNewVisitors)} icon={Users} color="#EC4899" />
           </div>
