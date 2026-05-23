@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ArrowLeft, Save, Upload, Trash2, Plus, X, GripVertical, Tag, ChevronUp, ChevronDown, Type } from 'lucide-react';
+import { ArrowLeft, Save, Upload, Trash2, Plus, X, GripVertical, Tag, ChevronUp, ChevronDown, Type, Package, CreditCard, FileText, Star, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../../supabase/client';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
