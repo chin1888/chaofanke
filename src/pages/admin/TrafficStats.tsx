@@ -392,17 +392,17 @@ export default function TrafficStats() {
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-500">{t('dashboard.statsTime')} {new Date().toLocaleString('en-US')}</span>
                 <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                  {(['realtime', '7days', '30days', 'day', 'week', 'month'] as const).map((t) => (
+                  {(['realtime', '7days', '30days', 'day', 'week', 'month'] as const).map((range) => (
                     <button
-                      key={t}
-                      onClick={() => setTimeRange(t)}
+                      key={range}
+                      onClick={() => setTimeRange(range)}
                       className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                        timeRange === t
+                        timeRange === range
                           ? 'bg-white text-blue-600 shadow-sm'
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
-                      {t === 'realtime' ? t('dashboard.realtime') : t === '7days' ? t('dashboard.7days') : t === '30days' ? t('dashboard.30days') : t === 'day' ? t('dashboard.day') : t === 'week' ? t('dashboard.week') : t('dashboard.month')}
+                      {range === 'realtime' ? t('dashboard.realtime') : range === '7days' ? t('dashboard.7days') : range === '30days' ? t('dashboard.30days') : range === 'day' ? t('dashboard.day') : range === 'week' ? t('dashboard.week') : t('dashboard.month')}
                     </button>
                   ))}
                   <div className="flex items-center px-2 border-l border-gray-200 ml-1">
