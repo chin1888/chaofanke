@@ -54,6 +54,8 @@ export default function TrafficStats() {
   const [cartAddCount, setCartAddCount] = useState(0);
   const [pendingShipmentCount, setPendingShipmentCount] = useState(0);
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
+  const [topProductsTab, setTopProductsTab] = useState<'views' | 'likes'>('views');
+  const [productLikeStats, setProductLikeStats] = useState<ProductViewStat[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -228,6 +230,43 @@ export default function TrafficStats() {
 
       setProductStats(productStatsData);
       setTrendData(hourlyData.map((h: any) => h.page_views));
+
+      // 从 product_likes 表获取点赞商品数据
+      const { data: productLikes } = await supabase
+        .from('product_likes')
+        .select('product_id, created_at')
+        .gte('created_at', `${startDate}T00:00:00`)
+        .lte('created_at', `${endDate}T23:59:59`);
+
+      const productLikeMap = new Map<string, number>();
+      productLikes?.forEach((pl: any) => {
+        if (pl.product_id) {
+          productLikeMap.set(pl.product_id, (productLikeMap.get(pl.product_id) || 0) + 1);
+        }
+      });
+
+      const likeProductIds = Array.from(productLikeMap.keys());
+      let productLikeStatsData: ProductViewStat[] = [];
+      if (likeProductIds.length > 0) {
+        const { data: products } = await supabase
+          .from('products')
+          .select('id, name')
+          .in('id', likeProductIds);
+
+        const productNameMap = new Map(products?.map((p: any) => [p.id, p.name]));
+
+        productLikeStatsData = likeProductIds.map(id => {
+          const likeCount = productLikeMap.get(id) || 0;
+          return {
+            product_id: id,
+            product_name: productNameMap.get(id) || 'Unknown Product',
+            view_count: likeCount,
+            unique_visitors: likeCount
+          };
+        }).sort((a, b) => b.view_count - a.view_count).slice(0, 10);
+      }
+
+      setProductLikeStats(productLikeStatsData);
 
       // ===== TOP HOT: 当天点赞数量最多的商品 + 商品名 =====
       const todayStr = now.toISOString().split('T')[0];
@@ -649,16 +688,42 @@ export default function TrafficStats() {
                   <PieChart className="w-5 h-5 text-purple-500" />
                   {t('dashboard.topProducts')}
                 </h3>
+                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setTopProductsTab('views')}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      topProductsTab === 'views'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {t('dashboard.hotProductsTop10')}
+                  </button>
+                  <button
+                    onClick={() => setTopProductsTab('likes')}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      topProductsTab === 'likes'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {t('dashboard.likedProductsTop10')}
+                  </button>
+                </div>
               </div>
               <div className="space-y-3 min-h-[200px] flex flex-col">
-                {productStats.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center text-gray-400">{t('common.noData')}</div>
-                  </div>
-                ) : (
-                  productStats.map((product, index) => {
-                    const totalViews = productStats.reduce((sum, p) => sum + p.view_count, 0);
-                    const percentage = totalViews > 0 ? (product.view_count / totalViews) * 100 : 0;
+                {(() => {
+                  const currentStats = topProductsTab === 'views' ? productStats : productLikeStats;
+                  if (currentStats.length === 0) {
+                    return (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center text-gray-400">{t('common.noData')}</div>
+                      </div>
+                    );
+                  }
+                  const totalCount = currentStats.reduce((sum, p) => sum + p.view_count, 0);
+                  return currentStats.map((product, index) => {
+                    const percentage = totalCount > 0 ? (product.view_count / totalCount) * 100 : 0;
                     return (
                       <div key={product.product_id} className="flex items-center">
                         <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold mr-2 ${
@@ -681,8 +746,8 @@ export default function TrafficStats() {
                         <span className="text-sm font-medium text-gray-500 w-12 text-right">{product.unique_visitors}</span>
                       </div>
                     );
-                  })
-                )}
+                  });
+                })()}
               </div>
             </motion.div>
           </div>
