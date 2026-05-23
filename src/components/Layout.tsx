@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Menu, X, Search, User, ChevronRight, LogOut } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useUser } from '../contexts/UserContext';
+import useVisitTracker from '../hooks/useVisitTracker';
 
 export default function Layout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { totalItems } = useCart();
   const { user, isLoggedIn, logout } = useUser();
   const location = useLocation();
+  useVisitTracker();
 
   const navLinks = [
     { name: 'DISCOVER E-Hookan', path: '/' },

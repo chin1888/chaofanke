@@ -150,13 +150,23 @@ export default function TrafficStats() {
         orders_count: prevOrders?.length || 0
       };
 
-      // 流量来源（模拟数据）
-      const trafficSources = estimatedVisitors > 0 ? [
-        { source_name: 'Direct', visitors: Math.floor(estimatedVisitors * 0.4) },
-        { source_name: 'Search Engine', visitors: Math.floor(estimatedVisitors * 0.3) },
-        { source_name: 'Social Media', visitors: Math.floor(estimatedVisitors * 0.2) },
-        { source_name: 'External Links', visitors: Math.floor(estimatedVisitors * 0.1) }
-      ] : [];
+      // 流量来源（从 traffic_sources 表查询真实数据）
+      const { data: trafficData } = await supabase
+        .from('traffic_sources')
+        .select('source_name, visitors')
+        .gte('stat_date', startDate)
+        .lte('stat_date', endDate);
+
+      const trafficSourceMap = new Map<string, number>();
+      trafficData?.forEach((row: any) => {
+        const name = row.source_name || 'Unknown';
+        trafficSourceMap.set(name, (trafficSourceMap.get(name) || 0) + (row.visitors || 0));
+      });
+
+      const trafficSources = Array.from(trafficSourceMap.entries())
+        .map(([source_name, visitors]) => ({ source_name, visitors }))
+        .sort((a, b) => b.visitors - a.visitors)
+        .slice(0, 10);
 
       // 24小时趋势（基于订单分布）
       const hourlyData = [];
