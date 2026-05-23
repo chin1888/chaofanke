@@ -13,6 +13,7 @@ interface Banner {
   title: string;
   subtitle: string;
   image_url: string;
+  images?: string[];
   link_url: string;
   position: string;
   sort_order: number;
@@ -27,6 +28,7 @@ export default function AdminBanners() {
     title: '',
     subtitle: '',
     image_url: '',
+    images: [] as string[],
     link_url: '',
     position: 'home',
     sort_order: 0,
@@ -70,14 +72,87 @@ export default function AdminBanners() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = {
+      ...formData,
+      image_url: formData.images.join(','),
+    };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { images, ...dbPayload } = payload as any;
     if (editingBanner) {
-      await supabase.from('banners').update(formData).eq('id', editingBanner.id);
+      await supabase.from('banners').update(dbPayload).eq('id', editingBanner.id);
     } else {
-      await supabase.from('banners').insert([formData]);
+      await supabase.from('banners').insert([dbPayload]);
     }
     setShowModal(false);
     setEditingBanner(null);
     fetchBanners();
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const newImages: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `banners/${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+
+      try {
+        const base64 = await fileToBase64(file);
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(fileName, decode(base64), { contentType: file.type });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(fileName);
+
+        newImages.push(publicUrl);
+      } catch (error) {
+        console.error('Upload failed:', error);
+        alert(t('products.uploadFailed') + (error as Error).message);
+      }
+    }
+
+    if (newImages.length > 0) {
+      setFormData(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+  };
+
+  const moveImage = (index: number, direction: 'left' | 'right') => {
+    setFormData(prev => {
+      const newImages = [...prev.images];
+      if (direction === 'left' && index > 0) {
+        [newImages[index], newImages[index - 1]] = [newImages[index - 1], newImages[index]];
+      } else if (direction === 'right' && index < newImages.length - 1) {
+        [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]];
+      }
+      return { ...prev, images: newImages };
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -89,10 +164,14 @@ export default function AdminBanners() {
 
   const openEdit = (banner: Banner) => {
     setEditingBanner(banner);
+    const parsedImages = banner.image_url
+      ? banner.image_url.split(',').map(u => u.trim()).filter(Boolean)
+      : [];
     setFormData({
       title: banner.title,
       subtitle: banner.subtitle || '',
       image_url: banner.image_url,
+      images: parsedImages,
       link_url: banner.link_url || '',
       position: banner.position || 'home',
       sort_order: banner.sort_order || 0,
@@ -103,7 +182,7 @@ export default function AdminBanners() {
 
   const openCreate = () => {
     setEditingBanner(null);
-    setFormData({ title: '', subtitle: '', image_url: '', link_url: '', position: 'home', sort_order: 0, is_active: true });
+    setFormData({ title: '', subtitle: '', image_url: '', images: [], link_url: '', position: 'home', sort_order: 0, is_active: true });
     setShowModal(true);
   };
   if (!isAuthenticated) return null;
@@ -128,34 +207,50 @@ export default function AdminBanners() {
           <div className="text-center py-12">{t('common.loading')}</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {banners.map((banner) => (
-              <motion.div
-                key={banner.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-lg shadow-sm overflow-hidden"
-              >
-                <div className="relative h-48">
-                  <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
-                  {banner.is_active && (
-                    <span className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-xs rounded">{t('common.active')}</span>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900">{banner.title}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{banner.subtitle}</p>
-                  <p className="text-sm text-gray-400 mt-2">{t('banners.sortOrderLabel')}: {banner.sort_order}</p>
-                  <div className="flex items-center justify-end space-x-2 mt-4">
-                    <button onClick={() => openEdit(banner)} className="p-2 text-blue-500 hover:bg-blue-50 rounded">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(banner.id)} className="p-2 text-red-500 hover:bg-red-50 rounded">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            {banners.map((banner) => {
+              const bannerImages = banner.image_url
+                ? banner.image_url.split(',').map(u => u.trim()).filter(Boolean)
+                : [];
+              return (
+                <motion.div
+                  key={banner.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-lg shadow-sm overflow-hidden"
+                >
+                  <div className="relative h-48 bg-gray-100">
+                    {bannerImages.length > 0 ? (
+                      <img src={bannerImages[0]} alt={banner.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <ImageIcon className="w-12 h-12" />
+                      </div>
+                    )}
+                    {banner.is_active && (
+                      <span className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-xs rounded">{t('common.active')}</span>
+                    )}
+                    {bannerImages.length > 1 && (
+                      <span className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/60 text-white text-xs rounded">
+                        {bannerImages.length} {t('products.imagesCount')}
+                      </span>
+                    )}
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-900">{banner.title}</h3>
+                    <p className="text-sm text-gray-500 mt-1">{banner.subtitle}</p>
+                    <p className="text-sm text-gray-400 mt-2">{t('banners.sortOrderLabel')}: {banner.sort_order}</p>
+                    <div className="flex items-center justify-end space-x-2 mt-4">
+                      <button onClick={() => openEdit(banner)} className="p-2 text-blue-500 hover:bg-blue-50 rounded">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDelete(banner.id)} className="p-2 text-red-500 hover:bg-red-50 rounded">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
 
@@ -189,17 +284,76 @@ export default function AdminBanners() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.imageUrlLabel')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.imageUrl')}</label>
                   <input
-                    type="text"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
-                    required
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                    multiple
+                    className="hidden"
                   />
+
+                  {formData.images.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {formData.images.map((img, idx) => (
+                        <div key={idx} className="relative group aspect-square">
+                          <img src={img} alt={`Banner ${idx + 1}`} className="w-full h-full object-cover rounded-lg border" />
+                          {idx === 0 && (
+                            <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-blue-500 text-white text-[10px] rounded">{t('common.cover')}</span>
+                          )}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 rounded-lg">
+                            <button
+                              type="button"
+                              onClick={() => moveImage(idx, 'left')}
+                              disabled={idx === 0}
+                              className="p-1 bg-white rounded hover:bg-gray-100 disabled:opacity-30"
+                              title={t('common.moveLeft')}
+                            >
+                              <ArrowLeft className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveImage(idx, 'right')}
+                              disabled={idx === formData.images.length - 1}
+                              className="p-1 bg-white rounded hover:bg-gray-100 disabled:opacity-30"
+                              title={t('common.moveRight')}
+                            >
+                              <Edit2 className="w-3 h-3 rotate-180" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(idx)}
+                              className="p-1 bg-red-500 text-white rounded hover:bg-red-600"
+                              title={t('common.delete')}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                  >
+                    {uploading ? (
+                      <span className="text-sm text-gray-500">{t('common.uploading')}</span>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-gray-400" />
+                        <span className="text-sm text-gray-600">{t('products.clickToUploadImages')}</span>
+                      </>
+                    )}
+                  </button>
+                  <p className="text-xs text-gray-400 mt-1">{t('products.imageUploadHint')}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.linkLabel')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.link')}</label>
                   <input
                     type="text"
                     value={formData.link_url}
