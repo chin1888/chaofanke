@@ -99,7 +99,7 @@ export default function ProductEdit() {
       .eq('id', id)
       .single();
     if (error || !data) {
-      alert('Product not found');
+      alert(t('products.productNotFound'));
       navigate('/admin/products');
       return;
     }
@@ -177,7 +177,7 @@ export default function ProductEdit() {
         const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(fileName);
         newImages.push(publicUrl);
       } catch (error) {
-        alert(`Upload failed: ${(error as Error).message}`);
+        alert(t('products.uploadFailed') + (error as Error).message);
       }
     }
     if (newImages.length > 0) {
@@ -199,7 +199,7 @@ export default function ProductEdit() {
 
   const handleSave = async () => {
     if (!formData.name || !formData.slug || !formData.price) {
-      alert('Please fill in required fields (Name, Slug, Price)');
+      alert(t('products.requiredFields'));
       return;
     }
     setSaving(true);
@@ -227,7 +227,7 @@ export default function ProductEdit() {
     const { error } = await supabase.from('products').update(payload).eq('id', id);
     if (error) {
       setSaving(false);
-      alert('Save failed: ' + error.message);
+      alert(t('common.saveFailed') + error.message);
       return;
     }
 
@@ -243,7 +243,7 @@ export default function ProductEdit() {
         }, { onConflict: 'product_id' });
       if (detailError) {
         setSaving(false);
-        alert('Product saved, but detail content failed: ' + detailError.message);
+        alert(t('products.detailSaveFailed') + detailError.message);
         return;
       }
     }
@@ -304,7 +304,7 @@ export default function ProductEdit() {
       const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(fileName);
       updateDetailBlock(idx, { url: publicUrl });
     } catch (error) {
-      alert(`Upload failed: ${(error as Error).message}`);
+      alert(t('products.uploadFailed') + (error as Error).message);
     }
     if (detailFileInputRef.current) detailFileInputRef.current.value = '';
   };
@@ -322,7 +322,7 @@ export default function ProductEdit() {
       }, { onConflict: 'product_id' });
     setDetailSaving(false);
     if (error) {
-      alert('Save detail content failed: ' + error.message);
+      alert(t('products.detailSaveFailed') + error.message);
       return;
     }
     setDetailSavingSuccess(true);
@@ -349,16 +349,16 @@ export default function ProductEdit() {
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Edit Product</h1>
+              <h1 className="text-xl font-bold text-gray-900">{t('products.editProduct')}</h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                {formData.name || 'Untitled Product'} · ID: {id?.slice(0, 12)}...
+                {formData.name || t('products.noProducts')} · {t('products.id')} {id?.slice(0, 12)}...
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             {/* Exchange rate badge */}
             <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-1.5 text-xs text-green-700">
-              {rateLoading ? 'Loading rate...' : `1 CNY = ${rate.toFixed(4)} USD`}
+              {rateLoading ? t('products.fetchingRate') : `1 CNY = ${rate.toFixed(4)} USD`}
             </div>
             <button
               onClick={handleSave}
@@ -372,12 +372,12 @@ export default function ProductEdit() {
               {savingSuccess ? (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <span>Saved</span>
+                  <span>{t('common.saved')}</span>
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                  <span>{saving ? t('common.saving') : t('common.saveChanges')}</span>
                 </>
               )}
             </button>
@@ -392,32 +392,32 @@ export default function ProductEdit() {
             <section className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                 <Package className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{t('products.basicInfo')}</h2>
               </div>
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Product Name <span className="text-red-500">*</span>
+                      {t('products.productName')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter product name"
+                      placeholder={t('products.productName')}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Slug <span className="text-red-500">*</span>
+                      {t('products.slug')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.slug}
                       onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="product-url-slug"
+                      placeholder={t('products.slug')}
                     />
                   </div>
                 </div>
@@ -425,7 +425,7 @@ export default function ProductEdit() {
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Category
+                      {t('products.category')}
                     </label>
                     <div className="relative">
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -434,14 +434,14 @@ export default function ProductEdit() {
                         onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
                         className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none"
                       >
-                        <option value="">Select Category</option>
+                        <option value="">{t('products.selectCategory')}</option>
                         {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                       </select>
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Status
+                      {t('common.status')}
                     </label>
                     <div className="flex items-center h-[42px] space-x-4">
                       <label className="flex items-center space-x-2 cursor-pointer">
@@ -451,12 +451,12 @@ export default function ProductEdit() {
                           onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
                           className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
-                        <span className="text-sm text-gray-700">Active</span>
+                        <span className="text-sm text-gray-700">{t('common.active')}</span>
                       </label>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                         formData.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                       }`}>
-                        {formData.is_active ? 'Visible to customers' : 'Hidden from store'}
+                        {formData.is_active ? t('products.visibleToCustomers') : t('products.hiddenFromStore')}
                       </span>
                     </div>
                   </div>
@@ -468,14 +468,14 @@ export default function ProductEdit() {
             <section className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Pricing</h2>
-                <span className="text-xs text-gray-400 ml-2">Input in CNY, stored in USD</span>
+                <h2 className="text-lg font-semibold text-gray-900">{t('products.pricing')}</h2>
+                <span className="text-xs text-gray-400 ml-2">{t('products.priceHint')}</span>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Price (CNY) <span className="text-red-500">*</span>
+                      {t('products.priceCny')} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">¥</span>
@@ -497,7 +497,7 @@ export default function ProductEdit() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Original Price (CNY)
+                      {t('products.originalPriceCny')}
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">¥</span>
@@ -520,7 +520,7 @@ export default function ProductEdit() {
                 </div>
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Stock <span className="text-red-500">*</span>
+                    {t('products.stock')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -538,33 +538,33 @@ export default function ProductEdit() {
             <section className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Description</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{t('products.description')}</h2>
               </div>
               <div className="p-6 space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Short Description
+                    {t('products.shortDescription')}
                   </label>
                   <input
                     type="text"
                     value={formData.short_description}
                     onChange={(e) => setFormData(prev => ({ ...prev, short_description: e.target.value }))}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Brief product summary (shown in product cards)"
+                    placeholder={t('products.shortDescPlaceholder')}
                     maxLength={200}
                   />
                   <p className="text-xs text-gray-400 mt-1">{(formData.short_description?.length || 0)}/200</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Full Description
+                    {t('products.fullDescription')}
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={8}
-                    placeholder="Detailed product description..."
+                    placeholder={t('products.descPlaceholder')}
                   />
                 </div>
               </div>
@@ -575,15 +575,15 @@ export default function ProductEdit() {
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ImageIcon className="w-5 h-5 text-blue-500" />
-                  <h2 className="text-lg font-semibold text-gray-900">Product Images</h2>
-                  <span className="text-sm text-gray-400">({formData.images.length} uploaded)</span>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('products.images')}</h2>
+                  <span className="text-sm text-gray-400">({t('products.uploadedCount').replace('{count}', String(formData.images.length))})</span>
                 </div>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                 >
                   <Upload className="w-4 h-4" />
-                  <span>Upload Images</span>
+                  <span>{t('products.uploadImages')}</span>
                 </button>
               </div>
               <input
@@ -601,8 +601,8 @@ export default function ProductEdit() {
                     className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all"
                   >
                     <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 font-medium">Click to upload product images</p>
-                    <p className="text-sm text-gray-400 mt-1">PNG, JPG, GIF up to 5MB each</p>
+                    <p className="text-gray-500 font-medium">{t('products.clickToUploadImages')}</p>
+                    <p className="text-sm text-gray-400 mt-1">{t('products.imageUploadHint')}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -611,7 +611,7 @@ export default function ProductEdit() {
                         <img src={img} alt={`Product image ${idx + 1}`} className="w-full h-full object-cover" />
                         {/* Index badge */}
                         <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
-                          {idx === 0 ? 'Cover' : `#${idx + 1}`}
+                          {idx === 0 ? t('common.cover') : `#${idx + 1}`}
                         </div>
                         {/* Controls */}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -619,7 +619,7 @@ export default function ProductEdit() {
                             <button
                               onClick={() => moveImage(idx, idx - 1)}
                               className="mr-2 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
-                              title="Move left"
+                              title={t('common.moveLeft')}
                             >
                               <ArrowLeft className="w-4 h-4" />
                             </button>
@@ -627,7 +627,7 @@ export default function ProductEdit() {
                           <button
                             onClick={() => removeImage(idx)}
                             className="p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600"
-                            title="Delete"
+                            title={t('common.delete')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -635,7 +635,7 @@ export default function ProductEdit() {
                             <button
                               onClick={() => moveImage(idx, idx + 1)}
                               className="ml-2 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 rotate-180"
-                              title="Move right"
+                              title={t('common.moveRight')}
                             >
                               <ArrowLeft className="w-4 h-4" />
                             </button>
@@ -649,7 +649,7 @@ export default function ProductEdit() {
                       className="aspect-square border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all"
                     >
                       <Plus className="w-8 h-8 text-gray-400 mb-1" />
-                      <span className="text-xs text-gray-400">Add</span>
+                      <span className="text-xs text-gray-400">{t('common.add')}</span>
                     </div>
                   </div>
                 )}
@@ -660,8 +660,8 @@ export default function ProductEdit() {
             <section className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                 <Star className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Features</h2>
-                <span className="text-sm text-gray-400">({formData.features.filter(f => f.trim()).length} items)</span>
+                <h2 className="text-lg font-semibold text-gray-900">{t('products.features')}</h2>
+                <span className="text-sm text-gray-400">({formData.features.filter(f => f.trim()).length} {t('products.itemsCount', { count: formData.features.filter(f => f.trim()).length })})</span>
               </div>
               <div className="p-6">
                 {formData.features.map((f, idx) => (
@@ -673,7 +673,7 @@ export default function ProductEdit() {
                       type="text"
                       value={f}
                       onChange={(e) => updateFeature(idx, e.target.value)}
-                      placeholder={`Feature ${idx + 1}`}
+                      placeholder={t('products.featureIndex', { n: idx + 1 })}
                       className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     {formData.features.length > 1 && (
@@ -691,7 +691,7 @@ export default function ProductEdit() {
                   className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-700 mt-2 px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Feature</span>
+                  <span>{t('products.addFeature')}</span>
                 </button>
               </div>
             </section>
@@ -700,8 +700,8 @@ export default function ProductEdit() {
             <section className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                 <Package className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Box Contents</h2>
-                <span className="text-sm text-gray-400">({formData.box_contents.filter(b => b.trim()).length} items)</span>
+                <h2 className="text-lg font-semibold text-gray-900">{t('products.boxContents')}</h2>
+                <span className="text-sm text-gray-400">({formData.box_contents.filter(b => b.trim()).length} {t('products.itemsCount', { count: formData.box_contents.filter(b => b.trim()).length })})</span>
               </div>
               <div className="p-6">
                 {formData.box_contents.map((b, idx) => (
@@ -713,7 +713,7 @@ export default function ProductEdit() {
                       type="text"
                       value={b}
                       onChange={(e) => updateBoxContent(idx, e.target.value)}
-                      placeholder={`Box item ${idx + 1}`}
+                      placeholder={t('products.boxItemIndex', { n: idx + 1 })}
                       className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     {formData.box_contents.length > 1 && (
@@ -731,7 +731,7 @@ export default function ProductEdit() {
                   className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-700 mt-2 px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Box Item</span>
+                  <span>{t('products.addBoxItem')}</span>
                 </button>
               </div>
             </section>
@@ -741,8 +741,8 @@ export default function ProductEdit() {
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-500" />
-                  <h2 className="text-lg font-semibold text-gray-900">Detail Content / 商品详情</h2>
-                  <span className="text-sm text-gray-400">({detailBlocks.length} blocks)</span>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('products.detailContent')}</h2>
+                  <span className="text-sm text-gray-400">({detailBlocks.length} {t('products.blocksCount', { count: detailBlocks.length })})</span>
                 </div>
                 <button
                   onClick={handleSaveDetailBlocks}
@@ -754,12 +754,12 @@ export default function ProductEdit() {
                   {detailSavingSuccess ? (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                      <span>Saved</span>
+                      <span>{t('common.saved')}</span>
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      <span>{detailSaving ? 'Saving...' : 'Save Details'}</span>
+                      <span>{detailSaving ? t('common.saving') : t('products.saveDetails')}</span>
                     </>
                   )}
                 </button>
@@ -769,14 +769,14 @@ export default function ProductEdit() {
                   <div key={idx} className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {block.type === 'image' ? 'Image Block' : 'Text Block'} #{idx + 1}
+                        {block.type === 'image' ? t('products.imageBlock') : t('products.textBlock')} #{idx + 1}
                       </span>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => moveDetailBlock(idx, idx - 1)}
                           disabled={idx === 0}
                           className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-30"
-                          title="Move up"
+                          title={t('common.moveUp')}
                         >
                           <ChevronUp className="w-4 h-4" />
                         </button>
@@ -784,14 +784,14 @@ export default function ProductEdit() {
                           onClick={() => moveDetailBlock(idx, idx + 1)}
                           disabled={idx === detailBlocks.length - 1}
                           className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-30"
-                          title="Move down"
+                          title={t('common.moveDown')}
                         >
                           <ChevronDown className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => removeDetailBlock(idx)}
                           className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
+                          title={t('common.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -816,7 +816,7 @@ export default function ProductEdit() {
                             className="w-full py-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50/50 transition-colors flex flex-col items-center gap-2"
                           >
                             <Upload className="w-8 h-8 text-gray-400" />
-                            <span className="text-sm text-gray-500">Click to upload image</span>
+                            <span className="text-sm text-gray-500">{t('products.clickUploadImage')}</span>
                           </button>
                         )}
                         <input
@@ -857,14 +857,14 @@ export default function ProductEdit() {
                     className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-600 transition-all"
                   >
                     <ImageIcon className="w-4 h-4" />
-                    Add Image Block
+                    {t('products.addImageBlock')}
                   </button>
                   <button
                     onClick={() => addDetailBlock('text')}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-600 transition-all"
                   >
                     <Type className="w-4 h-4" />
-                    Add Text Block
+                    {t('products.addTextBlock')}
                   </button>
                 </div>
               </div>
@@ -876,7 +876,7 @@ export default function ProductEdit() {
                 onClick={() => navigate('/admin/products')}
                 className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSave}
@@ -888,12 +888,12 @@ export default function ProductEdit() {
                 {savingSuccess ? (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                    <span>Saved</span>
+                    <span>{t('common.saved')}</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                    <span>{saving ? t('common.saving') : t('common.saveChanges')}</span>
                   </>
                 )}
               </button>

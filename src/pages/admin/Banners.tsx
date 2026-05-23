@@ -37,6 +37,7 @@ export default function AdminBanners() {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -80,7 +81,7 @@ export default function AdminBanners() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this banner?')) {
+    if (confirm(t('banners.confirmDelete'))) {
       await supabase.from('banners').delete().eq('id', id);
       fetchBanners();
     }
@@ -113,18 +114,18 @@ export default function AdminBanners() {
 
       <main className="flex-1 overflow-auto p-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Banner Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('banners.title')}</h1>
           <button
             onClick={openCreate}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             <Plus className="w-5 h-5" />
-            <span>Add Banner</span>
+            <span>{t('banners.addBanner')}</span>
           </button>
         </div>
 
         {loading ? (
-          <div className="text-center py-12">Loading...</div>
+          <div className="text-center py-12">{t('common.loading')}</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {banners.map((banner) => (
@@ -137,13 +138,13 @@ export default function AdminBanners() {
                 <div className="relative h-48">
                   <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
                   {banner.is_active && (
-                    <span className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-xs rounded">Active</span>
+                    <span className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-xs rounded">{t('common.active')}</span>
                   )}
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900">{banner.title}</h3>
                   <p className="text-sm text-gray-500 mt-1">{banner.subtitle}</p>
-                  <p className="text-sm text-gray-400 mt-2">Sort Order: {banner.sort_order}</p>
+                  <p className="text-sm text-gray-400 mt-2">{t('banners.sortOrderLabel')}: {banner.sort_order}</p>
                   <div className="flex items-center justify-end space-x-2 mt-4">
                     <button onClick={() => openEdit(banner)} className="p-2 text-blue-500 hover:bg-blue-50 rounded">
                       <Edit2 className="w-4 h-4" />
@@ -162,14 +163,14 @@ export default function AdminBanners() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-lg">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">{editingBanner ? 'Edit Banner' : 'Add Banner'}</h2>
+                <h2 className="text-xl font-bold">{editingBanner ? t('banners.editBanner') : t('banners.addBanner')}</h2>
                 <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.titleLabel')}</label>
                   <input
                     type="text"
                     value={formData.title}
@@ -179,7 +180,7 @@ export default function AdminBanners() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.subtitleLabel')}</label>
                   <input
                     type="text"
                     value={formData.subtitle}
@@ -188,7 +189,7 @@ export default function AdminBanners() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.imageUrlLabel')}</label>
                   <input
                     type="text"
                     value={formData.image_url}
@@ -198,7 +199,7 @@ export default function AdminBanners() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Link</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.linkLabel')}</label>
                   <input
                     type="text"
                     value={formData.link_url}
@@ -207,7 +208,7 @@ export default function AdminBanners() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.sortOrderLabel')}</label>
                   <input
                     type="number"
                     value={formData.sort_order}
@@ -222,7 +223,7 @@ export default function AdminBanners() {
                     onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                     className="rounded"
                   />
-                  <label className="text-sm">Active</label>
+                  <label className="text-sm">{t('common.active')}</label>
                 </div>
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
@@ -230,13 +231,13 @@ export default function AdminBanners() {
                     onClick={() => setShowModal(false)}
                     className="px-4 py-2 border rounded-lg hover:bg-gray-50"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                   >
-                    Save
+                    {t('common.save')}
                   </button>
                 </div>
               </form>

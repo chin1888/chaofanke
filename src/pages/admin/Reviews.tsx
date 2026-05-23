@@ -47,6 +47,7 @@ export default function AdminReviews() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabType>('reviews');
   const [reviews, setReviews] = useState<Review[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -136,7 +137,7 @@ export default function AdminReviews() {
     });
   };
   const handleDelete = async (id: string) => {
-    if (confirm('确定删除？')) {
+    if (confirm(t('reviews.confirmDelete'))) {
       await supabase.from('reviews').delete().eq('id', id);
       fetchData();
     }
@@ -164,13 +165,13 @@ export default function AdminReviews() {
       <AdminSidebar />
 
       <main className="flex-1 overflow-auto p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Review Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('reviews.title')}</h1>
         
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Total Reviews</p>
+                <p className="text-sm text-gray-500 mb-1">{t('reviews.totalReviews')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.reviews}</p>
               </div>
               <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -181,7 +182,7 @@ export default function AdminReviews() {
           <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Total Likes</p>
+                <p className="text-sm text-gray-500 mb-1">{t('reviews.totalLikes')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.likes}</p>
               </div>
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -192,7 +193,7 @@ export default function AdminReviews() {
           <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Total Shares</p>
+                <p className="text-sm text-gray-500 mb-1">{t('reviews.totalShares')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.shares}</p>
               </div>
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -208,33 +209,33 @@ export default function AdminReviews() {
               {(['reviews', 'likes', 'shares'] as TabType[]).map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === tab ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-                  {tab === 'reviews' ? 'Reviews' : tab === 'likes' ? 'Likes' : 'Shares'}
+                  {tab === 'reviews' ? t('reviews.reviewsTab') : tab === 'likes' ? t('reviews.likesTab') : t('reviews.sharesTab')}
                 </button>
               ))}
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              <input type="text" placeholder={t('reviews.searchPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
 
-          {loading ? <div className="text-center py-12 text-gray-500">Loading...</div> : (
+          {loading ? <div className="text-center py-12 text-gray-500">{t('common.loading')}</div> : (
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
                   {activeTab === 'likes' ? (
                     <>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Product</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{t('reviews.product')}</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer hover:text-blue-600" onClick={() => setLikesSortOrder(likesSortOrder === 'desc' ? 'asc' : 'desc')}>
-                        Likes {likesSortOrder === 'desc' ? '↓' : '↑'}
+                        {t('reviews.likesCount')} {likesSortOrder === 'desc' ? '↓' : '↑'}
                       </th>
                     </>
                   ) : (
                     <>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">User</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Product</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{activeTab === 'reviews' ? 'Rating' : 'Count'}</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{t('reviews.user')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{t('reviews.product')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{activeTab === 'reviews' ? t('reviews.rating') : t('reviews.count')}</th>
                     </>
                   )}
                 </tr>
@@ -243,7 +244,7 @@ export default function AdminReviews() {
                 {activeTab === 'reviews' && filteredReviews.map((review, index) => (
                   <tr key={review.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{review.customer_name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{review.product_name || 'Unknown Product'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{review.product_name || t('reviews.unknownProduct')}</td>
                     <td className="px-4 py-3 text-sm text-blue-600">{review.rating}</td>
                   </tr>
                 ))}
@@ -257,8 +258,8 @@ export default function AdminReviews() {
                 ))}
                 {activeTab === 'shares' && sharesList.map((share, index) => (
                   <tr key={share.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{share.username || 'Default User'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{products.find(p => p.id === share.product_id)?.name || 'Unknown Product'}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{share.username || t('reviews.defaultUser')}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{products.find(p => p.id === share.product_id)?.name || t('products.unknown')}</td>
                     <td className="px-4 py-3 text-sm text-green-600">1</td>
                   </tr>
                 ))}

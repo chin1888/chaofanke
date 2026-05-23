@@ -59,6 +59,7 @@ export default function AdminProducts() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // 获取 CNY→USD 实时汇率
   const fetchExchangeRate = async () => {
@@ -203,7 +204,7 @@ export default function AdminProducts() {
         newImages.push(publicUrl);
       } catch (error) {
         console.error('Upload failed:', error);
-        alert(`"${file.name}" Upload failed: ${(error as Error).message}`);
+        alert(t('products.uploadFailed').replace('{fileName}', file.name).replace('{error}', (error as Error).message));
       }
     }
 
@@ -245,7 +246,7 @@ export default function AdminProducts() {
 
     if (editingProduct) {
       await supabase.from('products').update(payload).eq('id', editingProduct.id);
-      alert('Product updated');
+      alert(t('products.productUpdated'));
       fetchProducts();
     } else {
       await supabase.from('products').insert([payload]);
@@ -274,7 +275,7 @@ export default function AdminProducts() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!confirm(t('products.confirmDelete'))) return;
     await supabase.from('products').delete().eq('id', id);
     fetchProducts();
   };
@@ -287,7 +288,7 @@ export default function AdminProducts() {
       .eq('id', product.id);
 
     if (error) {
-      alert('Operation failed: ' + error.message);
+      alert(t('common.operationFailed').replace('{error}', error.message));
       return;
     }
 
@@ -391,11 +392,11 @@ export default function AdminProducts() {
 
   const handleBatchDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (!confirm(`Are you sure you want to delete ${selectedIds.size} selected product(s)? This cannot be undone.`)) return;
+    if (!confirm(t('products.confirmBatchDelete').replace('{count}', String(selectedIds.size)))) return;
     const idsToDelete = Array.from(selectedIds);
     const { error } = await supabase.from('products').delete().in('id', idsToDelete);
     if (error) {
-      alert('Batch delete failed: ' + error.message);
+      alert(t('products.batchDeleteFailed').replace('{error}', error.message));
       return;
     }
     setSelectedIds(new Set());
@@ -411,11 +412,11 @@ export default function AdminProducts() {
             <button onClick={() => navigate('/admin')} className="p-2 hover:bg-gray-200 rounded-lg">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-2xl font-bold">Product Management</h1>
+            <h1 className="text-2xl font-bold">{t('products.title')}</h1>
           </div>
           <button onClick={openCreate} className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
             <Plus className="w-4 h-4" />
-            <span>Add Product</span>
+            <span>{t('products.addProduct')}</span>
           </button>
         </div>
 
@@ -425,14 +426,14 @@ export default function AdminProducts() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder={t('products.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="">All Categories</option>
+              <option value="">{t('common.allCategories')}</option>
               {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
             </select>
           </div>
@@ -441,28 +442,28 @@ export default function AdminProducts() {
           {selectedIds.size > 0 && (
             <div className="px-6 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
               <span className="text-sm text-red-700 font-medium">
-                {selectedIds.size} item(s) selected
+                {t('common.totalItems').replace('{total}', String(selectedIds.size))} item(s) selected
               </span>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setSelectedIds(new Set())}
                   className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleBatchDelete}
                   className="flex items-center gap-1.5 text-sm text-white bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete Selected ({selectedIds.size})
+                  {t('products.deleteSelected').replace('{count}', String(selectedIds.size))}
                 </button>
               </div>
             </div>
           )}
 
           {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
           ) : (
             <div className="divide-y divide-gray-200">
               <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 text-sm font-medium text-gray-600">
@@ -475,13 +476,13 @@ export default function AdminProducts() {
                     className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
                   />
                 </div>
-                <div className="col-span-3">Product Info</div>
-                <div className="col-span-1 text-center">Category</div>
-                <div className="col-span-1 text-center">Price</div>
-                <div className="col-span-1 text-center">Stock</div>
-                <div className="col-span-1 text-center">Sales</div>
-                <div className="col-span-1 text-center">Status</div>
-                <div className="col-span-3 text-right">Actions</div>
+                <div className="col-span-3">{t('products.productInfo')}</div>
+                <div className="col-span-1 text-center">{t('products.category')}</div>
+                <div className="col-span-1 text-center">{t('products.price')}</div>
+                <div className="col-span-1 text-center">{t('products.stock')}</div>
+                <div className="col-span-1 text-center">{t('products.sales')}</div>
+                <div className="col-span-1 text-center">{t('common.status')}</div>
+                <div className="col-span-3 text-right">{t('common.actions')}</div>
               </div>
               {paginatedProducts.map((product) => (
                 <div key={product.id} className={`grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors ${selectedIds.has(product.id) ? 'bg-blue-50' : ''}`}>
@@ -498,12 +499,12 @@ export default function AdminProducts() {
                       {product.images && product.images.length > 0 ? (
                         <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="text-gray-400 text-xs">No Image</div>
+                        <div className="text-gray-400 text-xs">{t('products.noImage')}</div>
                       )}
                     </div>
                     <div className="min-w-0">
                       <div className="font-medium text-gray-900 truncate">{product.name}</div>
-                      <div className="text-xs text-gray-400 mt-0.5">ID:{product.id.slice(0, 8)}...</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{t('products.id')}:{product.id.slice(0, 8)}...</div>
                       {product.short_description && (
                         <div className="text-xs text-gray-500 mt-1 truncate">{product.short_description}</div>
                       )}
@@ -512,10 +513,10 @@ export default function AdminProducts() {
                       )}
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className={`px-2 py-0.5 text-xs rounded ${product.images && product.images.length > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-                          {product.images?.length || 0} img
+                          {t('products.imagesCount').replace('{total}', String(product.images?.length || 0))}
                         </span>
                         <span className="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-600">
-                          {product.features?.length || 0} feat
+                          {t('products.featuresCount').replace('{total}', String(product.features?.length || 0))}
                         </span>
                       </div>
                     </div>
@@ -531,7 +532,7 @@ export default function AdminProducts() {
                   <div className="col-span-1 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <span className={`w-2 h-2 rounded-full ${product.is_active ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                      <span className="text-sm text-gray-600">{product.is_active ? 'Active' : 'Inactive'}</span>
+                      <span className="text-sm text-gray-600">{product.is_active ? t('common.active') : t('common.inactive')}</span>
                     </div>
                   </div>
                   <div className="col-span-3 flex items-center justify-end gap-2">
@@ -540,13 +541,13 @@ export default function AdminProducts() {
                       className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors font-medium"
                     >
                       <Package className="w-3.5 h-3.5" />
-                      Edit Details
+                      {t('products.editDetails')}
                     </button>
                     <button
                       onClick={() => handleToggleStatus(product)}
                       className="px-3 py-1.5 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      {product.is_active ? 'Disable' : 'Enable'}
+                      {product.is_active ? t('common.disable') : t('common.enable')}
                     </button>
                     <button
                       onClick={() => handleDelete(product.id)}
@@ -562,9 +563,9 @@ export default function AdminProducts() {
 
           <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Total {totalProducts} items</span>
+              <span className="text-sm text-gray-600">{t('common.totalItems').replace('{total}', String(totalProducts))}</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Per page:</span>
+                <span className="text-sm text-gray-600">{t('common.perPage')}</span>
                 <select
                   value={pageSize}
                   onChange={(e) => handlePageSizeChange(Number(e.target.value))}
@@ -584,17 +585,17 @@ export default function AdminProducts() {
                 disabled={currentPage === 1}
                 className="px-3 py-1.5 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                {t('common.previous')}
               </button>
               <span className="text-sm text-gray-600 px-2">
-                Page {currentPage} of {totalPages || 1}
+                {t('common.pageOf').replace('{current}', String(currentPage)).replace('{total}', String(totalPages || 1))}
               </span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || totalPages === 0}
                 className="px-3 py-1.5 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Next
+                {t('common.next')}
               </button>
             </div>
           </div>
@@ -611,7 +612,7 @@ export default function AdminProducts() {
             onClick={(e) => e.stopPropagation()}
           >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">{editingProduct ? 'Edit Product' : 'Add Product'}</h2>
+                <h2 className="text-xl font-bold">{editingProduct ? t('products.editProduct') : t('products.addProduct')}</h2>
                 <button onClick={() => { setShowForm(false); resetForm(); }} className="p-2 hover:bg-gray-100 rounded-lg">
                   <X className="w-5 h-5" />
                 </button>
@@ -620,12 +621,12 @@ export default function AdminProducts() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* 汇率提示 */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 flex items-center justify-between text-sm">
-                  <span className="text-blue-700">
-                    💱 价格输入人民币（CNY），自动换算为美元（USD）存储
-                  </span>
+                    <span className="text-blue-700">
+                      {t('products.priceHint')}
+                    </span>
                   <span className="text-blue-600 font-medium">
                     {rateLoading ? (
-                      <span className="text-gray-400">获取汇率中...</span>
+                      <span className="text-gray-400">{t('products.fetchingRate')}</span>
                     ) : cnyToUsd ? (
                       `1 CNY ≈ ${cnyToUsd.toFixed(4)} USD`
                     ) : (
@@ -634,25 +635,25 @@ export default function AdminProducts() {
                         onClick={fetchExchangeRate}
                         className="underline text-blue-600 hover:text-blue-800"
                       >
-                        重新获取汇率
+                        {t('products.refetchRate')}
                       </button>
                     )}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Product Name *</label>
+                    <label className="block text-sm font-medium mb-1">{t('products.productName')} *</label>
                     <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Slug *</label>
+                    <label className="block text-sm font-medium mb-1">{t('products.slug')} *</label>
                     <input type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Price * <span className="text-gray-400 font-normal">(CNY ¥)</span></label>
+                    <label className="block text-sm font-medium mb-1">{t('products.priceCny')}</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">¥</span>
                       <input
@@ -662,21 +663,21 @@ export default function AdminProducts() {
                         value={formData.price}
                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         className="w-full pl-7 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="人民币金额"
+                        placeholder={t('products.cnyPlaceholder')}
                         required
                       />
                     </div>
                     {formData.price && cnyToUsd ? (
                       <p className="text-xs text-green-600 mt-1">
                         ≈ ${(parseFloat(formData.price) * cnyToUsd).toFixed(2)} USD
-                        {rateLoading && <span className="text-gray-400 ml-1">刷新中...</span>}
+                        {rateLoading && <span className="text-gray-400 ml-1">{t('products.fetchingRate')}</span>}
                       </p>
                     ) : rateLoading ? (
-                      <p className="text-xs text-gray-400 mt-1">获取汇率中...</p>
+                      <p className="text-xs text-gray-400 mt-1">{t('products.fetchingRate')}</p>
                     ) : null}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Original Price <span className="text-gray-400 font-normal">(CNY ¥)</span></label>
+                    <label className="block text-sm font-medium mb-1">{t('products.originalPriceCny')}</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">¥</span>
                       <input
@@ -686,7 +687,7 @@ export default function AdminProducts() {
                         value={formData.original_price}
                         onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
                         className="w-full pl-7 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="人民币金额"
+                        placeholder={t('products.cnyPlaceholder')}
                       />
                     </div>
                     {formData.original_price && cnyToUsd ? (
@@ -696,31 +697,31 @@ export default function AdminProducts() {
                     ) : null}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Stock *</label>
+                    <label className="block text-sm font-medium mb-1">{t('products.stock')} *</label>
                     <input type="number" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Category</label>
+                  <label className="block text-sm font-medium mb-1">{t('products.category')}</label>
                   <select value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
-                    <option value="">Select Category</option>
+                    <option value="">{t('products.selectCategory')}</option>
                     {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Short Description</label>
+                  <label className="block text-sm font-medium mb-1">{t('products.shortDescription')}</label>
                   <input type="text" value={formData.short_description} onChange={(e) => setFormData({ ...formData, short_description: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <label className="block text-sm font-medium mb-1">{t('products.description')}</label>
                   <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border rounded-lg" rows={4} />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Product Images</label>
+                  <label className="block text-sm font-medium mb-1">{t('products.images')}</label>
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -731,21 +732,21 @@ export default function AdminProducts() {
                   />
                   <div className="border border-gray-200 rounded-lg p-4 mb-3 min-h-[120px]">
                     {formData.images.length === 0 ? (
-                      <div className="text-gray-400 text-center py-8">No images</div>
+                      <div className="text-gray-400 text-center py-8">{t('products.noImages')}</div>
                     ) : (
                       <div className="flex flex-wrap gap-3">
                         {formData.images.map((img, idx) => (
                           <div key={idx} className="relative w-24 h-24 group">
-                            <img src={img} alt={`Product image ${idx + 1}`} className="w-full h-full object-cover rounded-lg border border-gray-200" onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/96?text=Error'; }} />
+                            <img src={img} alt={t('products.imageNumber').replace('{n}', String(idx + 1))} className="w-full h-full object-cover rounded-lg border border-gray-200" onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/96?text=Error'; }} />
                             <button
                               onClick={() => removeImage(idx)}
                               className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center shadow-md hover:bg-red-600 transition-colors"
-                              title="Delete Image"
+                              title={t('products.deleteImage')}
                             >
                               ×
                             </button>
                             <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs py-1 text-center rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                              Image {idx + 1}
+                                {t('products.imageNumber').replace('{n}', String(idx + 1))}
                             </div>
                           </div>
                         ))}
@@ -760,42 +761,42 @@ export default function AdminProducts() {
                       className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                       <Upload className="w-4 h-4" />
-                      <span>{uploading ? 'Uploading...' : 'Upload Images'}</span>
+                      <span>{uploading ? t('common.uploading') : t('products.uploadImages')}</span>
                     </button>
-                    <span className="text-sm text-gray-500">{formData.images.length} images uploaded</span>
+                    <span className="text-sm text-gray-500">{formData.images.length} {t('products.imagesUploaded')}</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Features</label>
+                  <label className="block text-sm font-medium mb-1">{t('products.features')}</label>
                   {formData.features.map((f, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
-                      <input type="text" value={f} onChange={(e) => updateFeature(idx, e.target.value)} placeholder="Feature description" className="flex-1 px-3 py-2 border rounded-lg" />
+                      <input type="text" value={f} onChange={(e) => updateFeature(idx, e.target.value)} placeholder={t('products.featurePlaceholder')} className="flex-1 px-3 py-2 border rounded-lg" />
                       {formData.features.length > 1 && <button onClick={() => removeFeatureField(idx)} className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>}
                     </div>
                   ))}
-                  <button onClick={addFeatureField} className="text-sm text-blue-600 hover:text-blue-700">+ Add Feature</button>
+                  <button onClick={addFeatureField} className="text-sm text-blue-600 hover:text-blue-700">{t('products.addFeature')}</button>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Box Contents</label>
+                  <label className="block text-sm font-medium mb-1">{t('products.boxContents')}</label>
                   {formData.box_contents.map((b, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
-                      <input type="text" value={b} onChange={(e) => updateBoxContent(idx, e.target.value)} placeholder="Item name" className="flex-1 px-3 py-2 border rounded-lg" />
+                      <input type="text" value={b} onChange={(e) => updateBoxContent(idx, e.target.value)} placeholder={t('products.boxContentPlaceholder')} className="flex-1 px-3 py-2 border rounded-lg" />
                       {formData.box_contents.length > 1 && <button onClick={() => removeBoxContentField(idx)} className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>}
                     </div>
                   ))}
-                  <button onClick={addBoxContentField} className="text-sm text-blue-600 hover:text-blue-700">+ Add Item</button>
+                  <button onClick={addBoxContentField} className="text-sm text-blue-600 hover:text-blue-700">{t('products.addBoxItem')}</button>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <input type="checkbox" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} />
-                  <label className="text-sm">Active</label>
+                  <label className="text-sm">{t('common.active')}</label>
                 </div>
 
                 <div className="flex space-x-3 pt-4">
-                  <button type="button" onClick={() => { setShowForm(false); resetForm(); }} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
-                  <button type="submit" className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800">Save</button>
+                  <button type="button" onClick={() => { setShowForm(false); resetForm(); }} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">{t('common.cancel')}</button>
+                  <button type="submit" className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800">{t('common.save')}</button>
                 </div>
               </form>
           </div>

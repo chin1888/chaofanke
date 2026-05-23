@@ -33,6 +33,7 @@ export default function PaymentGateways() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
+  const { t } = useLanguage();
   const [gateways, setGateways] = useState<PaymentGateway[]>([]);
   const [editing, setEditing] = useState<PaymentGateway | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,11 +119,11 @@ export default function PaymentGateways() {
       <main className="flex-1 overflow-auto p-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Payment Management</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('payments.title')}</h1>
           </div>
 
           {loading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className="text-center py-8">{t('common.loading')}</div>
           ) : (
             <div className="space-y-4">
               {gateways.map((gateway) => (
@@ -133,19 +134,19 @@ export default function PaymentGateways() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">{gateway.name}</h3>
-                      <p className="text-sm text-gray-500">Fee: {gateway.fee_percent}% + ${gateway.fee_fixed}</p>
+                      <p className="text-sm text-gray-500">{t('payments.fee').replace('{percent}', gateway.fee_percent?.toString() || '0').replace('{fixed}', gateway.fee_fixed?.toString() || '0')}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
                     <button
                       onClick={() => openEditModal(gateway)}
                       className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Edit Settings"
+                      title={t('common.editSettings')}
                     >
                       <Edit2 className="w-5 h-5" />
                     </button>
                     <span className={`px-2 py-1 rounded text-sm ${gateway.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {gateway.is_active ? 'Enabled' : 'Disabled'}
+                      {gateway.is_active ? t('common.enabled') : t('common.disabled')}
                     </span>
                     <button
                       onClick={() => toggleGateway(gateway.id, gateway.is_active)}
@@ -176,35 +177,35 @@ export default function PaymentGateways() {
               className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold">Edit {editing.name} Settings</h3>
+                <h3 className="text-lg font-bold">{t('common.editSettingsFor').replace('{name}', editing.name)}</h3>
                 <button onClick={closeEditModal} className="p-1 hover:bg-gray-100 rounded">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               <form onSubmit={handleSave} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">API Key</label>
+                  <label className="block text-sm font-medium mb-1">{t('payments.apiKey')}</label>
                   <input
                     type="text"
                     value={formData.api_key}
                     onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg"
-                    placeholder="Enter API Key"
+                    placeholder={t('payments.apiKeyPlaceholder')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">API Secret</label>
+                  <label className="block text-sm font-medium mb-1">{t('payments.apiSecret')}</label>
                   <input
                     type="password"
                     value={formData.api_secret}
                     onChange={(e) => setFormData({ ...formData, api_secret: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg"
-                    placeholder="Enter API Secret"
+                    placeholder={t('payments.apiSecretPlaceholder')}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Fee Percent (%)</label>
+                    <label className="block text-sm font-medium mb-1">{t('payments.feePercent')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -214,7 +215,7 @@ export default function PaymentGateways() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Fixed Fee ($)</label>
+                    <label className="block text-sm font-medium mb-1">{t('payments.feeFixed')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -231,7 +232,7 @@ export default function PaymentGateways() {
                     onChange={(e) => setFormData({ ...formData, test_mode: e.target.checked })}
                     className="w-4 h-4"
                   />
-                  <label className="text-sm">Test Mode</label>
+                  <label className="text-sm">{t('common.testMode')}</label>
                 </div>
                 <div className="flex space-x-3 pt-4">
                   <button
@@ -239,13 +240,13 @@ export default function PaymentGateways() {
                     onClick={closeEditModal}
                     className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
                   >
-                    Save
+                    {t('common.save')}
                   </button>
                 </div>
               </form>

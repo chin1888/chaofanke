@@ -26,6 +26,7 @@ export default function AdminAdmins() {
     is_active: true
   });
   const { admin: currentAdmin, isAuthenticated, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function AdminAdmins() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Confirm delete this admin?')) {
+    if (confirm(t('admins.confirmDelete'))) {
       await supabase.from('admins').delete().eq('id', id);
       fetchAdmins();
     }
@@ -84,7 +85,7 @@ export default function AdminAdmins() {
     setFormData({ username: '', password: '', role: 'admin', is_active: true });
     setShowModal(true);
   };
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) return <div className="p-8">{t('common.loading')}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -96,11 +97,11 @@ export default function AdminAdmins() {
             <button onClick={() => navigate('/admin')} className="p-2 hover:bg-gray-200 rounded-lg">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-2xl font-bold">Admin Management</h1>
+            <h1 className="text-2xl font-bold">{t('admins.title')}</h1>
           </div>
           <button onClick={openCreate} className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
             <Plus className="w-4 h-4" />
-            <span>Add Admin</span>
+            <span>{t('admins.addAdmin')}</span>
           </button>
         </div>
 
@@ -108,11 +109,11 @@ export default function AdminAdmins() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Username</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Role</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Status</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Created At</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">Actions</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">{t('admins.username')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">{t('admins.role')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">{t('common.status')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">{t('common.createdAt')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -133,7 +134,7 @@ export default function AdminAdmins() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded text-xs ${admin.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                      {admin.is_active ? 'Active' : 'Inactive'}
+                      {admin.is_active ? t('common.active') : t('common.inactive')}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
@@ -172,10 +173,10 @@ export default function AdminAdmins() {
               className="bg-white rounded-xl p-6 w-full max-w-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-bold mb-4">{editingAdmin ? 'Edit Admin' : 'Add Admin'}</h2>
+              <h2 className="text-xl font-bold mb-4">{editingAdmin ? t('admins.editAdmin') : t('admins.addAdmin')}</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Username</label>
+                  <label className="block text-sm font-medium mb-1">{t('admins.username')}</label>
                   <input
                     type="text"
                     value={formData.username}
@@ -186,7 +187,7 @@ export default function AdminAdmins() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Password {editingAdmin && '(Leave blank if not changing)'}</label>
+                  <label className="block text-sm font-medium mb-1">{t('admins.passwordLabel')} {t('admins.passwordHint')}</label>
                   <input
                     type="password"
                     value={formData.password}
@@ -196,14 +197,14 @@ export default function AdminAdmins() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Role</label>
+                  <label className="block text-sm font-medium mb-1">{t('admins.role')}</label>
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg"
                   >
-                    <option value="admin">Admin</option>
-                    <option value="superadmin">Super Admin</option>
+                    <option value="admin">{t('admins.roleAdmin')}</option>
+                    <option value="superadmin">{t('admins.roleSuperAdmin')}</option>
                   </select>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -212,7 +213,7 @@ export default function AdminAdmins() {
                     checked={formData.is_active}
                     onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                   />
-                  <label className="text-sm">Active</label>
+                  <label className="text-sm">{t('common.active')}</label>
                 </div>
                 <div className="flex space-x-3 pt-4">
                   <button
@@ -220,13 +221,13 @@ export default function AdminAdmins() {
                     onClick={() => setShowModal(false)}
                     className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
                   >
-                    Save
+                    {t('common.save')}
                   </button>
                 </div>
               </form>

@@ -49,6 +49,7 @@ export default function ProductPublish() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -125,7 +126,7 @@ export default function ProductPublish() {
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
+    if (confirm(t('products.confirmDelete'))) {
       await supabase.from('products').delete().eq('id', id);
       fetchData();
     }
@@ -150,7 +151,7 @@ export default function ProductPublish() {
 
       <main className="flex-1 overflow-auto p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('products.title')}</h1>
           <button onClick={() => setShowForm(true)} className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
             <Plus className="w-5 h-5" /><span>Add Product</span>
           </button>
@@ -159,12 +160,12 @@ export default function ProductPublish() {
           <div className="flex items-center space-x-4 p-4 border-b border-gray-100">
             <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input type="text" placeholder="Search products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              <input type="text" placeholder={t('products.searchPlaceholder')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
             <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
-              <option value="">All Categories</option>
+              <option value="">{t('common.allCategories')}</option>
               {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
             </select>
           </div>
@@ -173,21 +174,21 @@ export default function ProductPublish() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Product Info</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{t('products.productInfo')}</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer hover:text-blue-600" onClick={() => handleSort('price')}>
-                    Price {sortField === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('products.price')} {sortField === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer hover:text-blue-600" onClick={() => handleSort('stock')}>
-                    Total Stock {sortField === 'stock' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('products.totalStock')} {sortField === 'stock' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer hover:text-blue-600" onClick={() => handleSort('sales')}>
-                    Total Sales {sortField === 'sales' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('products.totalSales')} {sortField === 'sales' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{t('common.status')}</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase cursor-pointer hover:text-blue-600" onClick={() => handleSort('created_at')}>
-                    Created At {sortField === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('common.createdAt')} {sortField === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -206,12 +207,12 @@ export default function ProductPublish() {
                           <p className="text-sm font-medium text-gray-900 line-clamp-2">{product.name}</p>
                           <p className="text-xs text-gray-500 mt-1">ID:{product.id.slice(0, 18)}</p>
                           <div className="flex items-center space-x-2 mt-1">
-                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">In Stock</span>
+                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{t('products.inStock')}</span>
                             <button className="text-xs text-blue-600 hover:underline flex items-center">
-                              <EyeIcon className="w-3 h-3 mr-1" />Preview
+                              <EyeIcon className="w-3 h-3 mr-1" />{t('common.preview')}
                             </button>
                             <button className="text-xs text-blue-600 hover:underline flex items-center">
-                              <Copy className="w-3 h-3 mr-1" />Copy Link
+                              <Copy className="w-3 h-3 mr-1" />{t('common.copyLink')}
                             </button>
                           </div>
                         </div>
@@ -233,7 +234,7 @@ export default function ProductPublish() {
                           onClick={() => setOpenMenuId(openMenuId === product.id ? null : product.id)}
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                         >
-                          More
+                          {t('common.more')}
                         </button>
                         {openMenuId === product.id && (
                           <motion.div 
@@ -245,19 +246,19 @@ export default function ProductPublish() {
                               onClick={() => { setEditingProduct(product); setShowForm(true); setOpenMenuId(null); }}
                               className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
-                              Edit
+                              {t('common.edit')}
                             </button>
                             <button 
                               onClick={() => { handleToggleStatus(product.id, product.is_active); setOpenMenuId(null); }}
                               className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
-                              {product.is_active ? 'Deactivate' : 'Activate'}
+                              {product.is_active ? t('common.deactivate') : t('common.activate')}
                             </button>
                             <button 
                               onClick={() => { handleDelete(product.id); setOpenMenuId(null); }}
                               className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
                             >
-                              Delete
+                              {t('common.delete')}
                             </button>
                           </motion.div>
                         )}
@@ -270,7 +271,7 @@ export default function ProductPublish() {
           )}
 
           <div className="flex items-center justify-between px-4 py-4 border-t border-gray-100">
-            <span className="text-sm text-gray-600">Total {totalItems} products</span>
+            <span className="text-sm text-gray-600">{t('products.totalProducts').replace('{count}', totalItems.toString())}</span>
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
@@ -292,11 +293,11 @@ export default function ProductPublish() {
                 onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
                 className="ml-4 px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 bg-white"
               >
-                <option value={5}>5 per page</option>
-                <option value={10}>10 per page</option>
-                <option value={20}>20 per page</option>
-                <option value={50}>50 per page</option>
-                <option value={100}>100 per page</option>
+                <option value={5}>{t('products.perPageOption').replace('{n}', '5')}</option>
+                <option value={10}>{t('products.perPageOption').replace('{n}', '10')}</option>
+                <option value={20}>{t('products.perPageOption').replace('{n}', '20')}</option>
+                <option value={50}>{t('products.perPageOption').replace('{n}', '50')}</option>
+                <option value={100}>{t('products.perPageOption').replace('{n}', '100')}</option>
               </select>
             </div>
           </div>

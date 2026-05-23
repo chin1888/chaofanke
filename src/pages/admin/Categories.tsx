@@ -36,6 +36,7 @@ export default function AdminCategories() {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/admin/login');
@@ -78,23 +79,23 @@ export default function AdminCategories() {
           const base64 = (reader.result as string).split(',')[1];
           const { error: uploadError } = await supabase.storage.from('categories').upload(fileName, decode(base64), { contentType: file.type });
           if (uploadError) {
-            alert('上传失败: ' + uploadError.message);
+            alert(t('categories.uploadFailed') + ': ' + uploadError.message);
           } else {
             const { data: { publicUrl } } = supabase.storage.from('categories').getPublicUrl(fileName);
             setFormData(prev => ({ ...prev, image_url: publicUrl }));
           }
         } catch (err) {
-          alert('上传失败');
+          alert(t('categories.uploadFailed'));
         }
         setUploading(false);
       };
       reader.onerror = () => {
-        alert('读取文件失败');
+        alert(t('categories.uploadFailed'));
         setUploading(false);
       };
       reader.readAsDataURL(file);
     } catch (err) {
-      alert('文件处理失败');
+      alert(t('categories.uploadFailed'));
       setUploading(false);
     }
   };
@@ -125,7 +126,7 @@ export default function AdminCategories() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this category?')) {
+    if (confirm(t('categories.confirmDelete'))) {
       await supabase.from('categories').delete().eq('id', id);
       fetchCategories();
     }
@@ -158,10 +159,10 @@ export default function AdminCategories() {
       <main className="flex-1 overflow-auto">
         <div className="bg-white border-b">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-            <h1 className="text-xl font-bold">Category Management</h1>
+            <h1 className="text-xl font-bold">{t('categories.title')}</h1>
             <button onClick={openCreate} className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800">
               <Plus className="w-4 h-4" />
-              <span>Add Category</span>
+              <span>{t('categories.addCategory')}</span>
             </button>
           </div>
         </div>
@@ -171,12 +172,12 @@ export default function AdminCategories() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sort Order</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('categories.image')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('categories.name')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('categories.slug')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('categories.sortOrder')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('categories.status')}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('categories.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -206,7 +207,7 @@ export default function AdminCategories() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs rounded-full ${category.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {category.is_active ? 'Active' : 'Inactive'}
+                        {category.is_active ? t('common.active') : t('common.inactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
@@ -227,22 +228,22 @@ export default function AdminCategories() {
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-xl p-6 w-full max-w-md">
-              <h2 className="text-lg font-bold mb-4">{editingCategory ? 'Edit Category' : 'Add Category'}</h2>
+              <h2 className="text-lg font-bold mb-4">{editingCategory ? t('categories.editCategory') : t('categories.addCategory')}</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
+                  <label className="block text-sm font-medium mb-1">{t('categories.name')}</label>
                   <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Slug</label>
+                  <label className="block text-sm font-medium mb-1">{t('categories.slug')}</label>
                   <input type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <label className="block text-sm font-medium mb-1">{t('categories.description')}</label>
                   <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border rounded-lg" rows={3} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Category Image</label>
+                  <label className="block text-sm font-medium mb-2">{t('categories.categoryImage')}</label>
                   <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                   {formData.image_url ? (
                     <div className="relative mb-3">
@@ -254,21 +255,21 @@ export default function AdminCategories() {
                   ) : (
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                       <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">{uploading ? 'Uploading...' : 'Click to upload image'}</p>
+                      <p className="text-sm text-gray-500">{uploading ? t('common.uploading') : t('categories.clickUpload')}</p>
                     </div>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Sort Order</label>
+                  <label className="block text-sm font-medium mb-1">{t('categories.sortOrder')}</label>
                   <input type="number" value={formData.sort_order} onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded-lg" />
                 </div>
                 <div className="flex items-center space-x-2">
                   <input type="checkbox" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} />
-                  <label className="text-sm">Active</label>
+                  <label className="text-sm">{t('common.active')}</label>
                 </div>
                 <div className="flex space-x-3 pt-4">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
-                  <button type="submit" className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800">Save</button>
+                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">{t('common.cancel')}</button>
+                  <button type="submit" className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800">{t('common.save')}</button>
                 </div>
               </form>
             </motion.div>

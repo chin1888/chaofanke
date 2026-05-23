@@ -39,6 +39,7 @@ export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const { t } = useLanguage();
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/admin/login');
@@ -157,12 +158,12 @@ export default function AdminOrders() {
       <main className="flex-1 overflow-auto p-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Sales Analysis</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('orders.title')}</h1>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search orders..."
+                placeholder={t('orders.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-64 pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -183,7 +184,7 @@ export default function AdminOrders() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">{stat.category_name}</p>
-                      <p className="text-2xl font-bold text-gray-900">{stat.total_quantity} pcs</p>
+                      <p className="text-2xl font-bold text-gray-900">{stat.total_quantity} {t('orders.pcs')}</p>
                       <p className="text-sm text-green-600">${stat.total_amount.toLocaleString()}</p>
                     </div>
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -196,18 +197,18 @@ export default function AdminOrders() {
           )}
 
           {loading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className="text-center py-8">{t('common.loading')}</div>
           ) : (
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Order No.</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Customer</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Category</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Amount</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Date</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">{t('orders.orderNo')}</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">{t('orders.customer')}</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">{t('products.category')}</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">{t('orders.amount')}</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">{t('common.status')}</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">{t('common.date')}</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -244,7 +245,7 @@ export default function AdminOrders() {
                         <span className={`ml-1 px-2 py-1 rounded text-xs ${
                           order.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-500'
                         }`}>
-                          {order.payment_status === 'paid' ? '✓ Paid' : '○ Unpaid'}
+                          {order.payment_status === 'paid' ? t('orders.paid') : t('orders.unpaid')}
                         </span>
                       )}
                     </td>
@@ -255,7 +256,7 @@ export default function AdminOrders() {
                           onClick={() => setSelectedOrder(order)}
                           className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
                         >
-                          Actions
+                          {t('common.actions')}
                         </button>
                       </div>
                     </td>
@@ -274,30 +275,30 @@ export default function AdminOrders() {
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4"
             >
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Order: {selectedOrder.order_number}</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">{t('orders.orderPrefix')} {selectedOrder.order_number}</h3>
               <div className="space-y-3 mb-6">
                 <div className="text-sm text-gray-600">
-                  <strong>Customer:</strong> {selectedOrder.customer_name}
+                  <strong>{t('orders.customerLabel')}</strong> {selectedOrder.customer_name}
                 </div>
                 <div className="text-sm text-gray-600">
-                  <strong>Email:</strong> {selectedOrder.customer_email || 'N/A'}
+                  <strong>{t('orders.emailLabel')}</strong> {selectedOrder.customer_email || t('common.na')}
                 </div>
                 <div className="text-sm text-gray-600">
-                  <strong>Phone:</strong> {selectedOrder.customer_phone || 'N/A'}
+                  <strong>{t('orders.phoneLabel')}</strong> {selectedOrder.customer_phone || t('common.na')}
                 </div>
                 <div className="text-sm text-gray-600">
-                  <strong>Address:</strong> {selectedOrder.shipping_address || 'N/A'}
+                  <strong>{t('orders.addressLabel')}</strong> {selectedOrder.shipping_address || t('common.na')}
                 </div>
                 <div className="text-sm text-gray-600">
-                  <strong>Amount:</strong> ${selectedOrder.total_amount}
+                  <strong>{t('orders.amountLabel')}</strong> ${selectedOrder.total_amount}
                 </div>
                 <div className="text-sm text-gray-600">
-                  <strong>Payment:</strong> {selectedOrder.payment_method || 'N/A'} ({selectedOrder.payment_status})
+                  <strong>{t('orders.paymentLabel')}</strong> {selectedOrder.payment_method || t('common.na')} ({selectedOrder.payment_status})
                 </div>
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Update Order Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('orders.updateStatus')}</label>
                 <div className="flex flex-wrap gap-2">
                   {['pending', 'confirmed', 'completed', 'cancelled'].map((status) => (
                     <button
@@ -310,14 +311,17 @@ export default function AdminOrders() {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                      {status === 'pending' ? t('orders.pending') :
+                       status === 'confirmed' ? t('orders.confirmed') :
+                       status === 'completed' ? t('orders.completed') :
+                       t('orders.cancelled')}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Update Payment Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('orders.updatePaymentStatus')}</label>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleUpdatePaymentStatus(selectedOrder.id, 'paid')}
@@ -328,7 +332,7 @@ export default function AdminOrders() {
                         : 'bg-green-100 text-green-700 hover:bg-green-200'
                     }`}
                   >
-                    ✓ Mark as Paid
+                    {t('orders.markPaid')}
                   </button>
                   <button
                     onClick={() => handleUpdatePaymentStatus(selectedOrder.id, 'unpaid')}
@@ -339,7 +343,7 @@ export default function AdminOrders() {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    ○ Mark as Unpaid
+                    {t('orders.markUnpaid')}
                   </button>
                 </div>
               </div>
@@ -348,7 +352,7 @@ export default function AdminOrders() {
                 onClick={() => setSelectedOrder(null)}
                 className="w-full py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Close
+                {t('common.close')}
               </button>
             </motion.div>
           </div>

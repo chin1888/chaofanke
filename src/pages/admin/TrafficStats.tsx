@@ -40,6 +40,7 @@ export default function TrafficStats() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
+  const { t } = useLanguage();
   const [timeRange, setTimeRange] = useState<'realtime' | '7days' | '30days' | 'day' | 'week' | 'month'>('realtime');
   const [currentData, setCurrentData] = useState<TrafficData | null>(null);
   const [prevData, setPrevData] = useState<TrafficData | null>(null);
@@ -199,7 +200,7 @@ export default function TrafficStats() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `流量统计_${new Date().toLocaleDateString()}.csv`;
+    link.download = `Traffic_Stats_${new Date().toLocaleDateString()}.csv`;
     link.click();
   };
 
@@ -274,7 +275,7 @@ export default function TrafficStats() {
         <div>
           <div className="text-4xl font-bold text-gray-900 mb-3">{value.toLocaleString()}</div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-500">vs same time yesterday</span>
+            <span className="text-gray-500">{t('dashboard.vsYesterday')}</span>
             {change === 0 ? (
               <span className="text-gray-400">-</span>
             ) : (
@@ -313,7 +314,7 @@ export default function TrafficStats() {
         </div>
         <div className="text-3xl font-bold text-gray-900 mb-3">{formatValue(value)}</div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">vs previous day</span>
+          <span className="text-gray-500">{t('dashboard.vsPreviousDay')}</span>
           {change === 0 ? (
             <span className="text-gray-400">-</span>
           ) : (
@@ -348,7 +349,7 @@ export default function TrafficStats() {
         )}
       </div>
       <div className="flex items-center justify-between text-sm mt-1">
-        <span className="text-gray-500">较前日同时段</span>
+        <span className="text-gray-500">{t('dashboard.vsPreviousDay')}</span>
         <span className="text-gray-400">-</span>
       </div>
     </motion.div>
@@ -386,10 +387,10 @@ export default function TrafficStats() {
                 <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                   <BarChart3 className="w-5 h-5 text-white" />
                 </div>
-                <h1 className="text-xl font-bold">Traffic Dashboard</h1>
+                <h1 className="text-xl font-bold">{t('dashboard.title')}</h1>
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-500">Stats Time {new Date().toLocaleString('en-US')}</span>
+                <span className="text-sm text-gray-500">{t('dashboard.statsTime')} {new Date().toLocaleString('en-US')}</span>
                 <div className="flex items-center bg-gray-100 rounded-lg p-1">
                   {(['realtime', '7days', '30days', 'day', 'week', 'month'] as const).map((t) => (
                     <button
@@ -401,7 +402,7 @@ export default function TrafficStats() {
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
-                      {t === 'realtime' ? 'Realtime' : t === '7days' ? '7 Days' : t === '30days' ? '30 Days' : t === 'day' ? 'Day' : t === 'week' ? 'Week' : 'Month'}
+                      {t === 'realtime' ? t('dashboard.realtime') : t === '7days' ? t('dashboard.7days') : t === '30days' ? t('dashboard.30days') : t === 'day' ? t('dashboard.day') : t === 'week' ? t('dashboard.week') : t('dashboard.month')}
                     </button>
                   ))}
                   <div className="flex items-center px-2 border-l border-gray-200 ml-1">
@@ -414,7 +415,7 @@ export default function TrafficStats() {
                   className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
                 >
                   <Download className="w-4 h-4" />
-                  Export Data
+                  {t('dashboard.exportData')}
                 </button>
               </div>
             </div>
@@ -424,16 +425,16 @@ export default function TrafficStats() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <span className="text-lg font-semibold text-gray-900">Traffic Overview</span>
-              <span className="text-lg text-blue-500 cursor-pointer">Visitor Analysis &gt;</span>
+              <span className="text-lg font-semibold text-gray-900">{t('dashboard.trafficOverview')}</span>
+              <span className="text-lg text-blue-500 cursor-pointer">{t('dashboard.visitorAnalysis')} &gt;</span>
             </div>
             <div className="flex items-center gap-4">
               <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
-                <span>Time Trend</span>
+                <span>{t('dashboard.timeTrend')}</span>
                 <ChevronLeft className="w-4 h-4 rotate-90" />
               </button>
               <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
-                <span>All Devices</span>
+                <span>{t('dashboard.allDevices')}</span>
                 <ChevronLeft className="w-4 h-4 rotate-90" />
               </button>
             </div>
@@ -441,8 +442,8 @@ export default function TrafficStats() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <MainCard
-              title="Visitors"
-              subtitle="Visitors"
+              title={t('dashboard.visitors')}
+              subtitle={t('dashboard.visitors')}
               value={visitors}
               change={calcChange(visitors, prevVisitors)}
               color="#3B82F6"
@@ -450,16 +451,16 @@ export default function TrafficStats() {
               icon={Users}
             />
             <MainCard
-              title="Product Views"
-              subtitle="Product Visitors"
+              title={t('dashboard.productViews')}
+              subtitle={t('dashboard.productVisitors')}
               value={productViews}
               change={calcChange(productViews, prevProductViews)}
               color="#06B6D4"
               icon={ShoppingBag}
             />
             <MainCard
-              title="Conversion"
-              subtitle="Paying Customers"
+              title={t('dashboard.conversion')}
+              subtitle={t('dashboard.payingCustomers')}
               value={payingCustomers}
               change={calcChange(payingCustomers, prevPayingCustomers)}
               color="#8B5CF6"
@@ -468,19 +469,19 @@ export default function TrafficStats() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <SmallCard title="Visitors" value={visitors} change={calcChange(visitors, prevVisitors)} icon={Users} color="#3B82F6" />
-            <SmallCard title="Page Views" value={pageViews} change={calcChange(pageViews, prevPageViews)} icon={Eye} color="#10B981" />
-            <SmallCard title="Avg Pages/Session" value={Math.round(avgPages)} change={calcChange(avgPages, prevAvgPages)} icon={Activity} color="#F59E0B" />
-            <SmallCard title="Returning Visitors" value={returningVisitors} change={calcChange(returningVisitors, prevReturningVisitors)} icon={Users} color="#8B5CF6" />
-            <SmallCard title="New Visitors" value={newVisitors} change={calcChange(newVisitors, prevNewVisitors)} icon={Users} color="#EC4899" />
+            <SmallCard title={t('dashboard.visitors')} value={visitors} change={calcChange(visitors, prevVisitors)} icon={Users} color="#3B82F6" />
+            <SmallCard title={t('dashboard.pageViews')} value={pageViews} change={calcChange(pageViews, prevPageViews)} icon={Eye} color="#10B981" />
+            <SmallCard title={t('dashboard.avgPagesPerSession')} value={Math.round(avgPages)} change={calcChange(avgPages, prevAvgPages)} icon={Activity} color="#F59E0B" />
+            <SmallCard title={t('dashboard.returningVisitors')} value={returningVisitors} change={calcChange(returningVisitors, prevReturningVisitors)} icon={Users} color="#8B5CF6" />
+            <SmallCard title={t('dashboard.newVisitors')} value={newVisitors} change={calcChange(newVisitors, prevNewVisitors)} icon={Users} color="#EC4899" />
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <TagCard title="Store Followers" value={0} icon={Users} color="#3B82F6" />
-            <TagCard title="Live Visitors" value={0} tag="Live" icon={Eye} color="#EF4444" />
-            <TagCard title="Short Video" value={0} tag="Video" icon={Eye} color="#10B981" />
-            <TagCard title="Image/Text" value={0} icon={Eye} color="#F59E0B" />
-            <TagCard title="Store Page" value={0} icon={Eye} color="#8B5CF6" />
+            <TagCard title={t('dashboard.storeFollowers')} value={0} icon={Users} color="#3B82F6" />
+            <TagCard title={t('dashboard.liveVisitors')} value={0} tag={t('dashboard.live')} icon={Eye} color="#EF4444" />
+            <TagCard title={t('dashboard.shortVideo')} value={0} tag={t('dashboard.video')} icon={Eye} color="#10B981" />
+            <TagCard title={t('dashboard.imageText')} value={0} icon={Eye} color="#F59E0B" />
+            <TagCard title={t('dashboard.storePage')} value={0} icon={Eye} color="#8B5CF6" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -490,15 +491,15 @@ export default function TrafficStats() {
               className="bg-white rounded-xl shadow-sm p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-blue-500" />
-                  Traffic Sources
+                  {t('dashboard.trafficSources')}
                 </h3>
               </div>
               <div className="space-y-3 min-h-[200px] flex flex-col">
                 {trafficSources.length === 0 ? (
                   <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center text-gray-400">No Data</div>
+                    <div className="text-center text-gray-400">{t('common.noData')}</div>
                   </div>
                 ) : (
                   trafficSources.map((source, index) => {
@@ -534,13 +535,13 @@ export default function TrafficStats() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <PieChart className="w-5 h-5 text-purple-500" />
-                  Top Products TOP10
+                  {t('dashboard.topProducts')}
                 </h3>
               </div>
               <div className="space-y-3 min-h-[200px] flex flex-col">
                 {productStats.length === 0 ? (
                   <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center text-gray-400">No Data</div>
+                    <div className="text-center text-gray-400">{t('common.noData')}</div>
                   </div>
                 ) : (
                   productStats.map((product, index) => {
@@ -580,14 +581,14 @@ export default function TrafficStats() {
             className="bg-white rounded-xl shadow-sm p-6"
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Activity className="w-5 h-5 text-green-500" />
-                  24h Traffic Trend
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-green-500" />
+                  {t('dashboard.trend24h')}
               </h3>
             </div>
             <div className="h-64 flex items-end justify-between px-4">
               {hourlyData.length === 0 ? (
-                <div className="w-full text-center text-gray-400 py-8">暂无数据</div>
+                <div className="w-full text-center text-gray-400 py-8">{t('common.noData')}</div>
               ) : (
                 (() => {
                   const maxViews = Math.max(...hourlyData.map(h => h.page_views), 1);
@@ -605,7 +606,7 @@ export default function TrafficStats() {
                             className="w-12 bg-blue-200 rounded-t-lg cursor-pointer hover:bg-blue-300 transition-colors"
                           />
                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            {hour.page_views}人
+                            {hour.page_views}{t('dashboard.people')}
                           </div>
                         </div>
                         <span className="text-xs text-gray-400 mt-2">{timeLabels[i]}</span>

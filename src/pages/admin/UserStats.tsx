@@ -21,6 +21,7 @@ export default function UserStats() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [salesTrendData, setSalesTrendData] = useState<number[]>([30, 45, 35, 55, 48, 62, 58, 75, 68, 85, 78, 92]);
   const [stats, setStats] = useState<StatsData>({
@@ -97,12 +98,12 @@ export default function UserStats() {
     });
   };
   const statCards = [
-    { title: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-50' },
-    { title: 'Total Orders', value: stats.totalOrders, icon: ShoppingCart, color: 'text-green-600', bgColor: 'bg-green-50' },
-    { title: 'Total Products', value: stats.totalProducts, icon: Package, color: 'text-purple-600', bgColor: 'bg-purple-50' },
-    { title: 'Total Reviews', value: stats.totalReviews, icon: Star, color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
-    { title: 'Total Sales', value: `$${stats.totalSales.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-    { title: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: TrendIcon, color: 'text-orange-600', bgColor: 'bg-orange-50' },
+    { title: t('stats.totalUsers'), value: stats.totalUsers, icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+    { title: t('stats.totalOrders'), value: stats.totalOrders, icon: ShoppingCart, color: 'text-green-600', bgColor: 'bg-green-50' },
+    { title: t('stats.totalProducts'), value: stats.totalProducts, icon: Package, color: 'text-purple-600', bgColor: 'bg-purple-50' },
+    { title: t('stats.totalReviews'), value: stats.totalReviews, icon: Star, color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
+    { title: t('stats.totalSales'), value: `$${stats.totalSales.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: t('stats.conversionRate'), value: `${stats.conversionRate}%`, icon: TrendIcon, color: 'text-orange-600', bgColor: 'bg-orange-50' },
   ];
 
 
@@ -113,7 +114,7 @@ export default function UserStats() {
       <AdminSidebar />
 
       <main className="flex-1 overflow-auto p-6">
-        <h1 className="text-2xl font-bold mb-6">Data Overview</h1>
+        <h1 className="text-2xl font-bold mb-6">{t('stats.title')}</h1>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           {statCards.map((card, index) => (
@@ -140,7 +141,7 @@ export default function UserStats() {
             transition={{ delay: 0.3 }}
             className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
           >
-            <h3 className="text-lg font-semibold mb-4">Sales Trend</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('stats.salesTrend')}</h3>
             <div className="h-48 flex items-end justify-between gap-1 px-2">
               {salesTrendData.map((value, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center group relative">
@@ -155,7 +156,7 @@ export default function UserStats() {
                       className="w-4 bg-blue-400 rounded-t hover:bg-blue-500 transition-colors cursor-pointer"
                     />
                   </div>
-                  <span className="text-xs text-gray-500 mt-2">{i + 1}Mon</span>
+                  <span className="text-xs text-gray-500 mt-2">{i + 1}{t('stats.mon')}</span>
                 </div>
               ))}
             </div>
@@ -167,7 +168,7 @@ export default function UserStats() {
             transition={{ delay: 0.4 }}
             className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
           >
-            <h3 className="text-lg font-semibold mb-4">User Growth</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('stats.userGrowth')}</h3>
             <div className="h-48 flex items-center justify-center">
               <div className="relative w-40 h-40">
                 <svg viewBox="0 0 100 100" className="transform -rotate-90">
@@ -190,11 +191,11 @@ export default function UserStats() {
               <div className="ml-8 space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                  <span className="text-sm text-gray-600">Active Users</span>
+                  <span className="text-sm text-gray-600">{t('stats.activeUsers')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-gray-200 rounded-full" />
-                  <span className="text-sm text-gray-600">Potential Users</span>
+                  <span className="text-sm text-gray-600">{t('stats.potentialUsers')}</span>
                 </div>
               </div>
             </div>
