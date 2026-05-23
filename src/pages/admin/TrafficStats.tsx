@@ -47,7 +47,6 @@ export default function TrafficStats() {
   const [trafficSources, setTrafficSources] = useState<TrafficSource[]>([]);
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [productStats, setProductStats] = useState<ProductViewStat[]>([]);
-  const [loading, setLoading] = useState(true);
   const [trendData, setTrendData] = useState<number[]>([]);
   const [topHotCount, setTopHotCount] = useState(0);
   const [topHotProductName, setTopHotProductName] = useState('');
@@ -70,7 +69,6 @@ export default function TrafficStats() {
   }, [timeRange]);
 
   const fetchData = async () => {
-    setLoading(true);
     try {
       const now = new Date();
       const today = now.toISOString().split('T')[0];
@@ -337,7 +335,6 @@ export default function TrafficStats() {
     } catch (err) {
       console.error('Fetch error:', err);
     }
-    setLoading(false);
   };
 
   const calcChange = (current: number | undefined, prev: number | undefined) => {
