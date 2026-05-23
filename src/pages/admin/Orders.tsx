@@ -18,6 +18,7 @@ interface Order {
   status: string;
   payment_status: string;
   payment_method: string | null;
+  tracking_number: string | null;
   created_at: string;
   categories?: string[];
 }
@@ -39,6 +40,7 @@ export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [trackingNumber, setTrackingNumber] = useState('');
   const { t } = useLanguage();
   useEffect(() => {
     if (!isAuthenticated) {
@@ -144,6 +146,35 @@ export default function AdminOrders() {
     setSelectedOrder(null);
   };
 
+  const handleShipOrder = async (orderId: string) => {
+    if (!trackingNumber.trim()) return;
+    setUpdatingOrderId(orderId);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: 'shipped',
+          tracking_number: trackingNumber.trim(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (!error) {
+        setOrders(prev => prev.map(o =>
+          o.id === orderId ? { ...o, status: 'shipped', tracking_number: trackingNumber.trim() } : o
+        ));
+        setTrackingNumber('');
+      } else {
+        console.error('Failed to ship order:', error);
+        alert(t('orders.shipFailed') + ': ' + error.message);
+      }
+    } catch (err) {
+      console.error('Error shipping order:', err);
+    }
+    setUpdatingOrderId(null);
+    setSelectedOrder(null);
+  };
+
   const filteredOrders = orders.filter(o => 
     o.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -235,11 +266,17 @@ export default function AdminOrders() {
                       <span className={`px-2 py-1 rounded text-xs font-medium ${
                         order.status === 'completed' ? 'bg-green-100 text-green-700' :
                         order.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                        order.status === 'shipped' ? 'bg-indigo-100 text-indigo-700' :
                         order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
                         order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                         'bg-gray-100 text-gray-600'
                       }`}>
-                        {order.status}
+                        {order.status === 'pending' ? t('orders.pending') :
+                         order.status === 'confirmed' ? t('orders.confirmed') :
+                         order.status === 'shipped' ? t('orders.shipped') :
+                         order.status === 'completed' ? t('orders.completed') :
+                         order.status === 'cancelled' ? t('orders.cancelled') :
+                         order.status}
                       </span>
                       {order.payment_status && (
                         <span className={`ml-1 px-2 py-1 rounded text-xs ${
@@ -300,7 +337,7 @@ export default function AdminOrders() {
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('orders.updateStatus')}</label>
                 <div className="flex flex-wrap gap-2">
-                  {['pending', 'confirmed', 'completed', 'cancelled'].map((status) => (
+                  {['pending', 'confirmed', 'shipped', 'completed', 'cancelled'].map((status) => (
                     <button
                       key={status}
                       onClick={() => handleUpdateStatus(selectedOrder.id, status)}
@@ -313,6 +350,7 @@ export default function AdminOrders() {
                     >
                       {status === 'pending' ? t('orders.pending') :
                        status === 'confirmed' ? t('orders.confirmed') :
+                       status === 'shipped' ? t('orders.shipped') :
                        status === 'completed' ? t('orders.completed') :
                        t('orders.cancelled')}
                     </button>
@@ -348,8 +386,39 @@ export default function AdminOrders() {
                 </div>
               </div>
 
+              {/* Ship Order Section */}
+              {(selectedOrder.status === 'confirmed' || selectedOrder.status === 'pending') && selectedOrder.payment_status === 'paid' && (
+                <div className="mb-6 bg-blue-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-blue-800 mb-2">{t('orders.shipOrder')}</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={trackingNumber}
+                      onChange={(e) => setTrackingNumber(e.target.value)}
+                      placeholder={t('orders.trackingPlaceholder')}
+                      className="flex-1 px-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      onClick={() => handleShipOrder(selectedOrder.id)}
+                      disabled={updatingOrderId === selectedOrder.id || !trackingNumber.trim()}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {t('orders.ship')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {selectedOrder.status === 'shipped' && selectedOrder.tracking_number && (
+                <div className="mb-6 bg-blue-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-blue-800 mb-1">{t('orders.trackingNumber')}</label>
+                  <p className="text-sm text-blue-700 font-mono">{selectedOrder.tracking_number}</p>
+                  <p className="text-xs text-blue-500 mt-1">{t('orders.shippedStatus')}</p>
+                </div>
+              )}
+
               <button
-                onClick={() => setSelectedOrder(null)}
+                onClick={() => { setSelectedOrder(null); setTrackingNumber(''); }}
                 className="w-full py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 {t('common.close')}

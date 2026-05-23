@@ -258,8 +258,15 @@ const translations: Record<Lang, Record<string, string>> = {
     'orders.markUnpaid': '○ Mark as Unpaid',
     'orders.pending': 'Pending',
     'orders.confirmed': 'Confirmed',
+    'orders.shipped': 'Shipped',
     'orders.completed': 'Completed',
     'orders.cancelled': 'Cancelled',
+    'orders.shipOrder': 'Ship Order',
+    'orders.trackingPlaceholder': 'Enter tracking number',
+    'orders.ship': 'Ship',
+    'orders.trackingNumber': 'Tracking Number',
+    'orders.shippedStatus': 'Order has been shipped',
+    'orders.shipFailed': 'Failed to ship order',
 
     // Banners
     'banners.title': 'Banner Management',
@@ -593,8 +600,15 @@ const translations: Record<Lang, Record<string, string>> = {
     'orders.markUnpaid': '○ 标记未付款',
     'orders.pending': '待处理',
     'orders.confirmed': '已确认',
+    'orders.shipped': '已发货',
     'orders.completed': '已完成',
     'orders.cancelled': '已取消',
+    'orders.shipOrder': '去发货',
+    'orders.trackingPlaceholder': '填写物流单号',
+    'orders.ship': '发货',
+    'orders.trackingNumber': '物流单号',
+    'orders.shippedStatus': '订单已发货',
+    'orders.shipFailed': '发货失败',
 
     // Banners
     'banners.title': '轮播管理',
