@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
@@ -50,7 +50,7 @@ function App() {
               <Route path="profile" element={<Profile />} />
             </Route>
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<Navigate to="/admin/traffic-stats" replace />} />
             <Route path="/admin/product-publish" element={<ProductPublish />} />
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/products/:id/edit" element={<ProductEdit />} />

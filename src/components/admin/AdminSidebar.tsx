@@ -5,9 +5,8 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 
 const menuConfig = [
-  { nameKey: 'menu.dashboard', path: '/admin', icon: LayoutDashboard },
-  { nameKey: 'menu.overview', path: '/admin/user-stats', icon: FileText },
   { nameKey: 'menu.traffic', path: '/admin/traffic-stats', icon: TrendingUp },
+  { nameKey: 'menu.overview', path: '/admin/user-stats', icon: FileText },
   { nameKey: 'menu.sales', path: '/admin/orders', icon: ShoppingCart },
   { nameKey: 'menu.products', path: '/admin/products', icon: Package },
   { nameKey: 'menu.banners', path: '/admin/banners', icon: ImageIcon },
@@ -47,7 +46,7 @@ export default function AdminSidebar() {
       <nav className="flex-1 px-2">
         {menuConfig.map((item) => {
           const isActive = location.pathname === item.path ||
-            (item.path === '/admin' && location.pathname === '/admin');
+            (item.path === '/admin/traffic-stats' && location.pathname === '/admin/traffic-stats');
           return (
             <button
               key={item.path}
