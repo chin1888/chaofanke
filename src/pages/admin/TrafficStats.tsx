@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Package, ShoppingCart, Users, Star, LogOut, TrendingUp, FileText, CreditCard, Image as ImageIcon, LayoutDashboard, BarChart3, HelpCircle, ChevronLeft, ChevronRight, Download, Eye, ShoppingBag, Activity, PieChart } from 'lucide-react';
+import { Package, ShoppingCart, Users, Star, LogOut, TrendingUp, FileText, CreditCard, Image as ImageIcon, LayoutDashboard, BarChart3, HelpCircle, ChevronLeft, ChevronRight, Download, Eye, ShoppingBag, Activity, PieChart, DollarSign } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import AdminSidebar from '../../components/admin/AdminSidebar';
@@ -56,6 +56,8 @@ export default function TrafficStats() {
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
   const [topProductsTab, setTopProductsTab] = useState<'views' | 'likes'>('views');
   const [productLikeStats, setProductLikeStats] = useState<ProductViewStat[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [prevTotalRevenue, setPrevTotalRevenue] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -126,6 +128,12 @@ export default function TrafficStats() {
         .select('created_at, total_amount, user_id')
         .gte('created_at', `${prevStartDate}T00:00:00`)
         .lte('created_at', `${prevEndDate}T23:59:59`);
+
+      // 计算支付金额
+      const currentRevenue = orders?.reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0) || 0;
+      const previousRevenue = prevOrders?.reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0) || 0;
+      setTotalRevenue(currentRevenue);
+      setPrevTotalRevenue(previousRevenue);
 
       // product_views 表可能不存在，用订单数据估算流量
       const payingCustomers = new Set(orders?.map((o: any) => o.user_id).filter(Boolean));
@@ -620,7 +628,7 @@ export default function TrafficStats() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <SmallCard title={t('dashboard.visitors')} value={visitors} change={calcChange(visitors, prevVisitors)} icon={Users} color="#3B82F6" />
+            <SmallCard title={t('dashboard.paymentAmount')} value={`$${totalRevenue.toFixed(2)}`} change={calcChange(totalRevenue, prevTotalRevenue)} icon={DollarSign} color="#3B82F6" />
             <SmallCard title={t('dashboard.pageViews')} value={pageViews} change={calcChange(pageViews, prevPageViews)} icon={Eye} color="#10B981" />
             <SmallCard title={t('dashboard.avgPagesSession')} value={Math.round(avgPages)} change={calcChange(avgPages, prevAvgPages)} icon={Activity} color="#F59E0B" />
             <SmallCard title={t('dashboard.returningVisitors')} value={returningVisitors} change={calcChange(returningVisitors, prevReturningVisitors)} icon={Users} color="#8B5CF6" />
