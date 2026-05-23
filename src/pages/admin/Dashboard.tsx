@@ -230,40 +230,37 @@ export default function AdminDashboard() {
     setTrafficSources(trafficSources);
     setHourlyData(hourlyData);
 
-    // ===== TOP HOT: 当天访问次数最多的商品访问量 + 商品名 =====
+    // ===== TOP HOT: 当天点赞数量最多的商品 + 商品名 =====
     const todayStr = now.toISOString().split('T')[0];
-    const { data: todayProductViews } = await supabase
-      .from('product_views')
-      .select('product_id, view_count')
-      .gte('last_viewed_at', `${todayStr}T00:00:00`)
-      .lte('last_viewed_at', `${todayStr}T23:59:59`);
+    const { data: todayProductLikes } = await supabase
+      .from('product_likes')
+      .select('product_id, created_at')
+      .gte('created_at', `${todayStr}T00:00:00`)
+      .lte('created_at', `${todayStr}T23:59:59`);
 
-    if (todayProductViews && todayProductViews.length > 0) {
-      const viewMap = new Map<string, number>();
-      todayProductViews.forEach((pv: any) => {
-        viewMap.set(pv.product_id, (viewMap.get(pv.product_id) || 0) + (pv.view_count || 0));
-      });
-      let maxViews = 0;
-      let topProductId = '';
-      viewMap.forEach((views, id) => {
-        if (views > maxViews) {
-          maxViews = views;
-          topProductId = id;
-        }
-      });
-      setTopHotCount(maxViews);
-      if (topProductId) {
-        const { data: product } = await supabase
-          .from('products')
-          .select('name')
-          .eq('id', topProductId)
-          .single();
-        setTopHotProductName(product?.name || 'Unknown');
-      } else {
-        setTopHotProductName('');
+    const likeMap = new Map<string, number>();
+    todayProductLikes?.forEach((pl: any) => {
+      if (pl.product_id) {
+        likeMap.set(pl.product_id, (likeMap.get(pl.product_id) || 0) + 1);
       }
+    });
+    let maxLikes = 0;
+    let topProductId = '';
+    likeMap.forEach((likes, id) => {
+      if (likes > maxLikes) {
+        maxLikes = likes;
+        topProductId = id;
+      }
+    });
+    setTopHotCount(maxLikes);
+    if (topProductId) {
+      const { data: product } = await supabase
+        .from('products')
+        .select('name')
+        .eq('id', topProductId)
+        .single();
+      setTopHotProductName(product?.name || 'Unknown');
     } else {
-      setTopHotCount(0);
       setTopHotProductName('');
     }
 
