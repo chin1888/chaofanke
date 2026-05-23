@@ -47,6 +47,7 @@ export default function AdminDashboard() {
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [productStats, setProductStats] = useState<ProductViewStat[]>([]);
   const [topHotCount, setTopHotCount] = useState(0);
+  const [topHotProductName, setTopHotProductName] = useState('');
   const [cartAddCount, setCartAddCount] = useState(0);
   const [pendingShipmentCount, setPendingShipmentCount] = useState(0);
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
@@ -218,7 +219,7 @@ export default function AdminDashboard() {
     setTrafficSources(trafficSources);
     setHourlyData(hourlyData);
 
-    // ===== TOP HOT: 当天访问次数最多的商品访问量 =====
+    // ===== TOP HOT: 当天访问次数最多的商品访问量 + 商品名 =====
     const todayStr = now.toISOString().split('T')[0];
     const { data: todayProductViews } = await supabase
       .from('product_views')
@@ -231,10 +232,28 @@ export default function AdminDashboard() {
       todayProductViews.forEach((pv: any) => {
         viewMap.set(pv.product_id, (viewMap.get(pv.product_id) || 0) + (pv.view_count || 0));
       });
-      const maxViews = Math.max(...viewMap.values());
+      let maxViews = 0;
+      let topProductId = '';
+      viewMap.forEach((views, id) => {
+        if (views > maxViews) {
+          maxViews = views;
+          topProductId = id;
+        }
+      });
       setTopHotCount(maxViews);
+      if (topProductId) {
+        const { data: product } = await supabase
+          .from('products')
+          .select('name')
+          .eq('id', topProductId)
+          .single();
+        setTopHotProductName(product?.name || 'Unknown');
+      } else {
+        setTopHotProductName('');
+      }
     } else {
       setTopHotCount(0);
+      setTopHotProductName('');
     }
 
     // ===== 加购人数: 当天加入购物车的订单数量 (status=pending 即未完成) =====
@@ -262,7 +281,44 @@ export default function AdminDashboard() {
       .neq('status', 'cancelled');
     setPendingPaymentCount(paymentCount || 0);
 
-    setProductStats([]);
+    // ===== 热门商品 TOP10 =====
+    const { data: productViews } = await supabase
+      .from('product_views')
+      .select('product_id, view_count')
+      .gte('last_viewed_at', `${startDate}T00:00:00`)
+      .lte('last_viewed_at', `${today}T23:59:59`);
+
+    const productViewMap = new Map<string, { view_count: number; unique_visitors: number }>();
+    productViews?.forEach((pv: any) => {
+      const current = productViewMap.get(pv.product_id) || { view_count: 0, unique_visitors: 0 };
+      productViewMap.set(pv.product_id, {
+        view_count: current.view_count + (pv.view_count || 0),
+        unique_visitors: current.unique_visitors + 1
+      });
+    });
+
+    const productIds = Array.from(productViewMap.keys());
+    let productStatsData: ProductViewStat[] = [];
+    if (productIds.length > 0) {
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, name')
+        .in('id', productIds);
+
+      const productNameMap = new Map(products?.map((p: any) => [p.id, p.name]));
+
+      productStatsData = productIds.map(id => {
+        const stats = productViewMap.get(id)!;
+        return {
+          product_id: id,
+          product_name: productNameMap.get(id) || 'Unknown Product',
+          view_count: stats.view_count,
+          unique_visitors: stats.unique_visitors
+        };
+      }).sort((a, b) => b.view_count - a.view_count).slice(0, 10);
+    }
+
+    setProductStats(productStatsData);
     setTrendData(hourlyData.map((h: any) => h.page_views));
   };
 
@@ -412,7 +468,7 @@ export default function AdminDashboard() {
     );
   };
 
-  const TagCard = ({ title, value, tag, icon: Icon, color }: { title: string; value: number; tag?: string; icon: React.ElementType; color: string }) => (
+  const TagCard = ({ title, value, tag, subtitle, icon: Icon, color }: { title: string; value: number; tag?: string; subtitle?: string; icon: React.ElementType; color: string }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -434,7 +490,7 @@ export default function AdminDashboard() {
         )}
       </div>
       <div className="flex items-center justify-between text-sm mt-1">
-        <span className="text-gray-500">vs previous day</span>
+        <span className="text-gray-500 truncate max-w-[140px]">{subtitle || 'vs previous day'}</span>
         <span className="text-gray-400">-</span>
       </div>
     </motion.div>
@@ -562,7 +618,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <TagCard title={t('dashboard.topHot')} value={topHotCount} tag={t('dashboard.todayViews')} icon={TrendingUp} color="#EF4444" />
+            <TagCard title={t('dashboard.topHot')} value={topHotCount} tag={t('dashboard.todayViews')} subtitle={topHotProductName || '-'} icon={TrendingUp} color="#EF4444" />
             <TagCard title={t('dashboard.cartCount')} value={cartAddCount} tag={t('dashboard.cartPeople')} icon={ShoppingCart} color="#10B981" />
             <TagCard title={t('dashboard.pendingShipment')} value={pendingShipmentCount} icon={Package} color="#F59E0B" />
             <TagCard title={t('dashboard.pendingPayment')} value={pendingPaymentCount} icon={FileText} color="#3B82F6" />
