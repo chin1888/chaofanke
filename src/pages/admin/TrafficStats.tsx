@@ -49,6 +49,11 @@ export default function TrafficStats() {
   const [productStats, setProductStats] = useState<ProductViewStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [trendData, setTrendData] = useState<number[]>([]);
+  const [topHotCount, setTopHotCount] = useState(0);
+  const [topHotProductName, setTopHotProductName] = useState('');
+  const [cartAddCount, setCartAddCount] = useState(0);
+  const [pendingShipmentCount, setPendingShipmentCount] = useState(0);
+  const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -223,6 +228,68 @@ export default function TrafficStats() {
 
       setProductStats(productStatsData);
       setTrendData(hourlyData.map((h: any) => h.page_views));
+
+      // ===== TOP HOT: 当天访问次数最多的商品访问量 + 商品名 =====
+      const todayStr = now.toISOString().split('T')[0];
+      const { data: todayProductViews } = await supabase
+        .from('product_views')
+        .select('product_id, view_count')
+        .gte('last_viewed_at', `${todayStr}T00:00:00`)
+        .lte('last_viewed_at', `${todayStr}T23:59:59`);
+
+      if (todayProductViews && todayProductViews.length > 0) {
+        const viewMap = new Map<string, number>();
+        todayProductViews.forEach((pv: any) => {
+          viewMap.set(pv.product_id, (viewMap.get(pv.product_id) || 0) + (pv.view_count || 0));
+        });
+        let maxViews = 0;
+        let topProductId = '';
+        viewMap.forEach((views, id) => {
+          if (views > maxViews) {
+            maxViews = views;
+            topProductId = id;
+          }
+        });
+        setTopHotCount(maxViews);
+        if (topProductId) {
+          const { data: product } = await supabase
+            .from('products')
+            .select('name')
+            .eq('id', topProductId)
+            .single();
+          setTopHotProductName(product?.name || 'Unknown');
+        } else {
+          setTopHotProductName('');
+        }
+      } else {
+        setTopHotCount(0);
+        setTopHotProductName('');
+      }
+
+      // ===== 加购人数: 当天加入购物车的订单数量 (status=pending) =====
+      const { count: cartCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+        .gte('created_at', `${todayStr}T00:00:00`)
+        .lte('created_at', `${todayStr}T23:59:59`);
+      setCartAddCount(cartCount || 0);
+
+      // ===== 待发货: 已付款(status=confirmed)但未完成的订单 =====
+      const { count: shipmentCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'confirmed')
+        .eq('payment_status', 'paid');
+      setPendingShipmentCount(shipmentCount || 0);
+
+      // ===== 待付款: 已下单但未付款且非取消的订单 =====
+      const { count: paymentCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('payment_status', 'unpaid')
+        .neq('status', 'cancelled');
+      setPendingPaymentCount(paymentCount || 0);
     } catch (err) {
       console.error('Fetch error:', err);
     }
@@ -375,7 +442,7 @@ export default function TrafficStats() {
     );
   };
 
-  const TagCard = ({ title, value, tag, icon: Icon, color }: { title: string; value: number; tag?: string; icon: React.ElementType; color: string }) => (
+  const TagCard = ({ title, value, tag, subtitle, icon: Icon, color }: { title: string; value: number; tag?: string; subtitle?: string; icon: React.ElementType; color: string }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -397,7 +464,7 @@ export default function TrafficStats() {
         )}
       </div>
       <div className="flex items-center justify-between text-sm mt-1">
-        <span className="text-gray-500">{t('dashboard.vsPreviousDay')}</span>
+        <span className="text-gray-500 truncate max-w-[140px]">{subtitle || t('dashboard.vsPreviousDay')}</span>
         <span className="text-gray-400">-</span>
       </div>
     </motion.div>
@@ -525,11 +592,11 @@ export default function TrafficStats() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <TagCard title={t('dashboard.storeFollowers')} value={0} icon={Users} color="#3B82F6" />
-            <TagCard title={t('dashboard.liveVisitors')} value={0} tag={t('dashboard.live')} icon={Eye} color="#EF4444" />
-            <TagCard title={t('dashboard.shortVideo')} value={0} tag={t('dashboard.video')} icon={Eye} color="#10B981" />
-            <TagCard title={t('dashboard.imageText')} value={0} icon={Eye} color="#F59E0B" />
-            <TagCard title={t('dashboard.storePage')} value={0} icon={Eye} color="#8B5CF6" />
+            <TagCard title={t('dashboard.topHot')} value={topHotCount} tag={t('dashboard.todayViews')} subtitle={topHotProductName || '-'} icon={TrendingUp} color="#EF4444" />
+            <TagCard title={t('dashboard.cartCount')} value={cartAddCount} tag={t('dashboard.cartPeople')} icon={ShoppingCart} color="#10B981" />
+            <TagCard title={t('dashboard.pendingShipment')} value={pendingShipmentCount} icon={Package} color="#F59E0B" />
+            <TagCard title={t('dashboard.pendingPayment')} value={pendingPaymentCount} icon={FileText} color="#3B82F6" />
+            <TagCard title={t('dashboard.liveVisitors')} value={0} tag={t('dashboard.live')} icon={Eye} color="#8B5CF6" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
