@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ChevronLeft, Check, Heart, Share2, Link2, Minus, Plus, Package, Truck, Shield, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShoppingCart, ChevronLeft, Check, Heart, Share2, Link2, Minus, Plus, Package, Truck, Shield, RotateCcw, ChevronDown, ChevronUp, ArrowUp } from 'lucide-react';
 import { supabase } from '../supabase/client';
 import { useCart } from '../contexts/CartContext';
 import SEO from '../components/SEO';
@@ -51,6 +51,15 @@ export default function ProductDetail() {
   const [copied, setCopied] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<string>('');
   const [showBoxContents, setShowBoxContents] = useState(true);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     fetchProduct();
@@ -564,6 +573,21 @@ export default function ProductDetail() {
           </motion.div>
         )}
       </div>
+
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gray-900 text-white px-4 py-3 rounded-full shadow-xl hover:bg-gray-800 transition-colors"
+          >
+            <ArrowUp className="w-5 h-5" />
+            <span className="text-sm font-medium">Back to Top</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
