@@ -87,6 +87,18 @@ const translations: Record<Lang, Record<string, string>> = {
     'common.moveDown': 'Move down',
     'common.preview': 'Preview',
     'common.copyLink': 'Copy Link',
+    'common.loggingIn': 'Logging in...',
+    'common.username': 'Username',
+    'common.password': 'Password',
+
+    // Login
+    'login.title': 'Admin Login',
+    'login.subtitle': 'Super Admin / Admin Login',
+    'login.invalidCredentials': 'Invalid username or password',
+    'login.loginFailed': 'Login Failed',
+    'login.usernamePlaceholder': 'Enter username',
+    'login.passwordPlaceholder': 'Enter password',
+    'login.login': 'Login',
 
     // Dashboard / Traffic
     'dashboard.title': 'Traffic Dashboard',
@@ -404,6 +416,18 @@ const translations: Record<Lang, Record<string, string>> = {
     'common.moveDown': '下移',
     'common.preview': '预览',
     'common.copyLink': '复制链接',
+    'common.loggingIn': '登录中...',
+    'common.username': '用户名',
+    'common.password': '密码',
+
+    // Login
+    'login.title': '管理员登录',
+    'login.subtitle': '超级管理员 / 管理员登录',
+    'login.invalidCredentials': '用户名或密码错误',
+    'login.loginFailed': '登录失败',
+    'login.usernamePlaceholder': '请输入用户名',
+    'login.passwordPlaceholder': '请输入密码',
+    'login.login': '登录',
 
     // Dashboard / Traffic
     'dashboard.title': '流量仪表盘',
