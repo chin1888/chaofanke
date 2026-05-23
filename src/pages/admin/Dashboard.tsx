@@ -46,6 +46,10 @@ export default function AdminDashboard() {
   const [trafficSources, setTrafficSources] = useState<TrafficSource[]>([]);
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [productStats, setProductStats] = useState<ProductViewStat[]>([]);
+  const [topHotCount, setTopHotCount] = useState(0);
+  const [cartAddCount, setCartAddCount] = useState(0);
+  const [pendingShipmentCount, setPendingShipmentCount] = useState(0);
+  const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [trendData, setTrendData] = useState<number[]>([]);
   const { t } = useLanguage();
@@ -213,6 +217,51 @@ export default function AdminDashboard() {
     setPrevData(prevData);
     setTrafficSources(trafficSources);
     setHourlyData(hourlyData);
+
+    // ===== TOP HOT: 当天访问次数最多的商品访问量 =====
+    const todayStr = now.toISOString().split('T')[0];
+    const { data: todayProductViews } = await supabase
+      .from('product_views')
+      .select('product_id, view_count')
+      .gte('last_viewed_at', `${todayStr}T00:00:00`)
+      .lte('last_viewed_at', `${todayStr}T23:59:59`);
+
+    if (todayProductViews && todayProductViews.length > 0) {
+      const viewMap = new Map<string, number>();
+      todayProductViews.forEach((pv: any) => {
+        viewMap.set(pv.product_id, (viewMap.get(pv.product_id) || 0) + (pv.view_count || 0));
+      });
+      const maxViews = Math.max(...viewMap.values());
+      setTopHotCount(maxViews);
+    } else {
+      setTopHotCount(0);
+    }
+
+    // ===== 加购人数: 当天加入购物车的订单数量 (status=pending 即未完成) =====
+    const { count: cartCount } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      .gte('created_at', `${todayStr}T00:00:00`)
+      .lte('created_at', `${todayStr}T23:59:59`);
+    setCartAddCount(cartCount || 0);
+
+    // ===== 待发货: 已付款(status=confirmed)但未完成(status!=completed)的订单 =====
+    const { count: shipmentCount } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'confirmed')
+      .eq('payment_status', 'paid');
+    setPendingShipmentCount(shipmentCount || 0);
+
+    // ===== 待付款: 已下单但未付款(payment_status!=paid)且非取消的订单 =====
+    const { count: paymentCount } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('payment_status', 'unpaid')
+      .neq('status', 'cancelled');
+    setPendingPaymentCount(paymentCount || 0);
+
     setProductStats([]);
     setTrendData(hourlyData.map((h: any) => h.page_views));
   };
@@ -513,11 +562,11 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <TagCard title={t('dashboard.storeFollowers')} value={0} icon={Users} color="#3B82F6" />
-            <TagCard title={t('dashboard.liveVisitors')} value={0} tag={t('dashboard.live')} icon={Eye} color="#EF4444" />
-            <TagCard title={t('dashboard.shortVideo')} value={0} tag={t('dashboard.video')} icon={Eye} color="#10B981" />
-            <TagCard title={t('dashboard.imageText')} value={0} icon={Eye} color="#F59E0B" />
-            <TagCard title={t('dashboard.storePage')} value={0} icon={Eye} color="#8B5CF6" />
+            <TagCard title={t('dashboard.topHot')} value={topHotCount} tag={t('dashboard.todayViews')} icon={TrendingUp} color="#EF4444" />
+            <TagCard title={t('dashboard.cartCount')} value={cartAddCount} tag={t('dashboard.cartPeople')} icon={ShoppingCart} color="#10B981" />
+            <TagCard title={t('dashboard.pendingShipment')} value={pendingShipmentCount} icon={Package} color="#F59E0B" />
+            <TagCard title={t('dashboard.pendingPayment')} value={pendingPaymentCount} icon={FileText} color="#3B82F6" />
+            <TagCard title={t('dashboard.liveVisitors')} value={0} tag={t('dashboard.live')} icon={Eye} color="#8B5CF6" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
