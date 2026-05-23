@@ -271,6 +271,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'orders.trackingNumber': 'Tracking Number',
     'orders.shippedStatus': 'Order has been shipped',
     'orders.shipFailed': 'Failed to ship order',
+    'orders.showing': 'Showing',
+    'orders.of': 'of',
 
     // Banners
     'banners.title': 'Banner Management',
@@ -617,6 +619,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'orders.trackingNumber': '物流单号',
     'orders.shippedStatus': '订单已发货',
     'orders.shipFailed': '发货失败',
+    'orders.showing': '显示',
+    'orders.of': '共',
 
     // Banners
     'banners.title': '轮播管理',

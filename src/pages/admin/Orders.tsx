@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Package, ShoppingCart, Users, Star, LogOut, TrendingUp, FileText, CreditCard, Image as ImageIcon, LayoutDashboard, BarChart3, Search, ArrowLeft } from 'lucide-react';
+import { Package, ShoppingCart, Users, Star, LogOut, TrendingUp, FileText, CreditCard, Image as ImageIcon, LayoutDashboard, BarChart3, Search, ArrowLeft, ChevronLeft, ChevronRight, DollarSign, Truck, CheckCircle, Clock } from 'lucide-react';
 import { supabase } from '../../supabase/client';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -41,6 +41,8 @@ export default function AdminOrders() {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   const { t } = useLanguage();
   useEffect(() => {
     if (!isAuthenticated) {
@@ -190,6 +192,11 @@ export default function AdminOrders() {
   const unshippedCount = orders.filter(o => o.payment_status === 'paid' && o.status === 'confirmed').length;
   const completedCount = orders.filter(o => o.status === 'completed').length;
 
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedOrders = filteredOrders.slice((safePage - 1) * pageSize, safePage * pageSize);
+
   if (!isAuthenticated) return null;
 
   return (
@@ -199,32 +206,49 @@ export default function AdminOrders() {
       <main className="flex-1 overflow-auto p-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-6">
-              <h1 className="text-2xl font-bold text-gray-900">{t('orders.title')}</h1>
-              <div className="flex items-center gap-4 text-sm">
-                <span className="text-red-500">
-                  {t('orders.pending')}/{t('orders.paid')}: <strong>{pendingCount}/{paidCount}</strong>
-                </span>
-                <span className="text-red-500">
-                  {t('orders.paid')}: <strong>${totalPaidAmount.toLocaleString()}</strong>
-                </span>
-                <span className="text-red-500">
-                  {t('orders.unshipped')}/{t('orders.shipped')}: <strong>{unshippedCount}/{shippedCount}</strong>
-                </span>
-                <span className="text-red-500">
-                  {t('orders.completed')}: <strong>{completedCount}</strong>
-                </span>
-              </div>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">{t('orders.title')}</h1>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
                 placeholder={t('orders.searchPlaceholder')}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                 className="w-64 pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+            </div>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4 text-orange-500" />
+                <span className="text-sm text-orange-600 font-medium">{t('orders.pending')}</span>
+              </div>
+              <div className="text-3xl font-bold text-orange-700">{pendingCount}</div>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="w-4 h-4 text-green-500" />
+                <span className="text-sm text-green-600 font-medium">{t('orders.paid')}</span>
+              </div>
+              <div className="text-3xl font-bold text-green-700">{paidCount}</div>
+              <div className="text-sm text-green-600 mt-1">${totalPaidAmount.toFixed(2)}</div>
+            </div>
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Truck className="w-4 h-4 text-blue-500" />
+                <span className="text-sm text-blue-600 font-medium">{t('orders.unshipped')}</span>
+              </div>
+              <div className="text-3xl font-bold text-blue-700">{unshippedCount}<span className="text-base font-normal text-blue-500"> / {shippedCount} {t('orders.shipped')}</span></div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-4 h-4 text-purple-500" />
+                <span className="text-sm text-purple-600 font-medium">{t('orders.completed')}</span>
+              </div>
+              <div className="text-3xl font-bold text-purple-700">{completedCount}</div>
             </div>
           </div>
 
@@ -256,6 +280,7 @@ export default function AdminOrders() {
           {loading ? (
             <div className="text-center py-8">{t('common.loading')}</div>
           ) : (
+            <>
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -269,7 +294,7 @@ export default function AdminOrders() {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.map((order) => (
+                {paginatedOrders.map((order) => (
                   <tr key={order.id} className="border-t hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 font-medium">{order.order_number}</td>
                     <td className="px-4 py-3">
@@ -327,6 +352,45 @@ export default function AdminOrders() {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            {filteredOrders.length > pageSize && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                <span className="text-sm text-gray-500">
+                  {t('orders.showing')} {(safePage - 1) * pageSize + 1}-{Math.min(safePage * pageSize, filteredOrders.length)} {t('orders.of')} {filteredOrders.length}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={safePage <= 1}
+                    className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-gray-600" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                        page === safePage
+                          ? 'bg-blue-500 text-white'
+                          : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={safePage >= totalPages}
+                    className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </div>
 
