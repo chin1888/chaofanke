@@ -173,7 +173,45 @@ export default function TrafficStats() {
       setPrevData(prevData);
       setTrafficSources(trafficSources);
       setHourlyData(hourlyData);
-      setProductStats([]);
+
+      // 从 product_views 表获取热门商品数据
+      const { data: productViews } = await supabase
+        .from('product_views')
+        .select('product_id, view_count')
+        .gte('last_viewed_at', `${startDate}T00:00:00`)
+        .lte('last_viewed_at', `${endDate}T23:59:59`);
+
+      const productViewMap = new Map<string, { view_count: number; unique_visitors: number }>();
+      productViews?.forEach((pv: any) => {
+        const current = productViewMap.get(pv.product_id) || { view_count: 0, unique_visitors: 0 };
+        productViewMap.set(pv.product_id, {
+          view_count: current.view_count + (pv.view_count || 0),
+          unique_visitors: current.unique_visitors + 1
+        });
+      });
+
+      const productIds = Array.from(productViewMap.keys());
+      let productStatsData: ProductViewStat[] = [];
+      if (productIds.length > 0) {
+        const { data: products } = await supabase
+          .from('products')
+          .select('id, name')
+          .in('id', productIds);
+
+        const productNameMap = new Map(products?.map((p: any) => [p.id, p.name]));
+
+        productStatsData = productIds.map(id => {
+          const stats = productViewMap.get(id)!;
+          return {
+            product_id: id,
+            product_name: productNameMap.get(id) || 'Unknown Product',
+            view_count: stats.view_count,
+            unique_visitors: stats.unique_visitors
+          };
+        }).sort((a, b) => b.view_count - a.view_count).slice(0, 10);
+      }
+
+      setProductStats(productStatsData);
       setTrendData(hourlyData.map((h: any) => h.page_views));
     } catch (err) {
       console.error('Fetch error:', err);
