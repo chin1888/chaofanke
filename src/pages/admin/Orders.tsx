@@ -175,10 +175,20 @@ export default function AdminOrders() {
     setSelectedOrder(null);
   };
 
-  const filteredOrders = orders.filter(o => 
+  const filteredOrders = orders.filter(o =>
     o.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Summary stats
+  const pendingCount = orders.filter(o => o.status === 'pending').length;
+  const paidCount = orders.filter(o => o.payment_status === 'paid').length;
+  const totalPaidAmount = orders
+    .filter(o => o.payment_status === 'paid')
+    .reduce((sum, o) => sum + (o.total_amount || 0), 0);
+  const shippedCount = orders.filter(o => o.status === 'shipped').length;
+  const unshippedCount = orders.filter(o => o.payment_status === 'paid' && o.status === 'confirmed').length;
+  const completedCount = orders.filter(o => o.status === 'completed').length;
 
   if (!isAuthenticated) return null;
 
@@ -189,7 +199,23 @@ export default function AdminOrders() {
       <main className="flex-1 overflow-auto p-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">{t('orders.title')}</h1>
+            <div className="flex items-center gap-6">
+              <h1 className="text-2xl font-bold text-gray-900">{t('orders.title')}</h1>
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-red-500">
+                  {t('orders.pending')}/{t('orders.paid')}: <strong>{pendingCount}/{paidCount}</strong>
+                </span>
+                <span className="text-red-500">
+                  {t('orders.paid')}: <strong>${totalPaidAmount.toLocaleString()}</strong>
+                </span>
+                <span className="text-red-500">
+                  {t('orders.unshipped')}/{t('orders.shipped')}: <strong>{unshippedCount}/{shippedCount}</strong>
+                </span>
+                <span className="text-red-500">
+                  {t('orders.completed')}: <strong>{completedCount}</strong>
+                </span>
+              </div>
+            </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
