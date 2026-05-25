@@ -284,6 +284,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'banners.link': 'Link',
     'banners.sortOrderLabel': 'Sort Order',
     'banners.confirmDelete': 'Are you sure you want to delete this banner?',
+    'banners.imageUploadHint': 'PNG, JPG, GIF up to 5MB. Recommended: 1920 x 600px',
 
     // Categories
     'categories.title': 'Category Management',
@@ -632,6 +633,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'banners.link': '跳转链接',
     'banners.sortOrderLabel': '排序',
     'banners.confirmDelete': '确定要删除此轮播吗？',
+    'banners.imageUploadHint': '支持 PNG、JPG、GIF，单张最大 5MB，推荐尺寸 1920 x 600px',
 
     // Categories
     'categories.title': '分类管理',

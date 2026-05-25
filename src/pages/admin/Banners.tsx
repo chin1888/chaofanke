@@ -350,7 +350,7 @@ export default function AdminBanners() {
                       </>
                     )}
                   </button>
-                  <p className="text-xs text-gray-400 mt-1">{t('products.imageUploadHint')}</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('banners.imageUploadHint')}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('banners.link')}</label>
