@@ -193,18 +193,6 @@ export default function Home() {
                   >
                     {banner.subtitle}
                   </motion.p>
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    <Link
-                      to={banner.link_url}
-                      className="inline-block bg-white text-gray-900 px-8 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors"
-                    >
-                      Explore Now
-                    </Link>
-                  </motion.div>
                 </div>
               </div>
             </motion.div>
