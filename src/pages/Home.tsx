@@ -170,18 +170,18 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="absolute inset-0"
             >
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${banner.image_url})` }}
+              <img
+                src={banner.image_url}
+                alt={banner.title}
+                className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black/30" />
               <div className="absolute inset-0 flex items-center justify-center text-center text-white">
                 <div className="max-w-2xl px-4">
                   <motion.h1
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="text-4xl md:text-6xl font-bold mb-4"
+                    className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg"
                   >
                     {banner.title}
                   </motion.h1>
@@ -189,7 +189,7 @@ export default function Home() {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="text-lg md:text-xl mb-8"
+                    className="text-lg md:text-xl mb-8 drop-shadow-md"
                   >
                     {banner.subtitle}
                   </motion.p>
@@ -266,13 +266,14 @@ export default function Home() {
                     to={`/products?category=${category.slug}`}
                     className="group relative block aspect-[4/5] overflow-hidden rounded-2xl"
                   >
-                    <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                      style={{ backgroundImage: `url(${category.image_url || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600'})` }}
+                    <img
+                      src={category.image_url || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800'}
+                      alt={category.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <h3 className="text-2xl font-bold text-white">{category.name}</h3>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent group-hover:from-black/80 transition-colors" />
+                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                      <h3 className="text-2xl font-bold text-white drop-shadow-lg">{category.name}</h3>
                     </div>
                   </Link>
                 </motion.div>
